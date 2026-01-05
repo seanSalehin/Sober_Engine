@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Sober.Rendering.Shader
 {
-    internal class ShaderProgram : IDisposable
+    public class ShaderProgram : IDisposable
     {
         public int Test_Data { get; private set; }
 
@@ -31,8 +31,6 @@ namespace Sober.Rendering.Shader
 
             string vertexSource = File.ReadAllText(vertexFullPath);
             string fragmentSource = File.ReadAllText(fragmentFullPath);
-
-
 
 
 
@@ -93,12 +91,25 @@ namespace Sober.Rendering.Shader
         //control shader
         //use shader for drawing
         public void Bind() => GL.UseProgram(Test_Data);
+
         //stop using shader
         public void UnBind() => GL.UseProgram(0);
+
         //send a float to shader
-        public void SetFloat(string name, float value) => GL.Uniform1(_uniformLocations[name], value);
+        public void SetFloat(string name, float value)
+        {
+            int location = GL.GetUniformLocation(Test_Data, name);
+            if (location == -1)
+            {
+                Console.WriteLine($"Warning: Uniform '{name}' not found in shader.");
+                return;
+            }
+            GL.Uniform1(location, value);
+        }
+
         //send a color (4d vector) to shader
         public void SetVector4(string name, Vector4 value) => GL.Uniform4(_uniformLocations[name], value);
+
         //send a 4*4 matrix (transform) to the shader
         public void SetMatrix4(string name, Matrix4 value) => GL.UniformMatrix4(_uniformLocations[name], false, ref value);
 

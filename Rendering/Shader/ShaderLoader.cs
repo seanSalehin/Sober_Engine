@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sober.Rendering.Shader
 {
-    internal class ShaderLoader
+    public class ShaderLoader
     {
     }
 }

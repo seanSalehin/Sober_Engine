@@ -9,10 +9,10 @@ namespace Sober.Rendering.Mesh
         {
             float[] vertices = {
                 // positions        // colors
-                // x      y      z
-                 0.0f,  0.5f, 0f,  1f,0f,0f,1f,       //top center
-                 0.5f, -0.5f, 0f,  0f,1f,0f,1f,      // bottom right
-                -0.5f, -0.5f, 0f,  0f,0f,1f,1f,     // bottom left
+                // x      y      z         u      v
+                  0.0f,  0.5f,  0f,    0.5f, 1f,       //top center
+                   0.5f, -0.5f,  0f,    1f,   0f,      // bottom right
+                  -0.5f, -0.5f,  0f,    0f,   0f,     // bottom left
             };
             return new Mesh(vertices);
         }
@@ -22,15 +22,15 @@ namespace Sober.Rendering.Mesh
         public static Mesh CreateQuad()
         {
             float[] vertices = {
-                // positions       // colors
-                // x      y      z
-                -0.5f, 0.5f, 0f,   1f,1f,0f,1f,    // top left
-                 0.5f, 0.5f, 0f,   1f,0f,1f,1f,     // top right
-                 0.5f,-0.5f, 0f,   0f,1f,1f,1f,   // bottom right
-                -0.5f,-0.5f, 0f,   1f,1f,1f,1f   // bottom left
+                // positions       
+                // x      y    z   // U  V
+                -0.5f,  0.5f, 0f,   0f, 1f, // top-left
+                 0.5f,  0.5f, 0f,   1f, 1f, // top-right
+                 0.5f, -0.5f, 0f,   1f, 0f, // bottom-right
+                -0.5f, -0.5f, 0f,   0f, 0f  // bottom-left
             };
             int[] indices = { 0, 1, 2, 2, 3, 0 };
-            return new Mesh(vertices, indices);
+            return new Mesh(vertices, vertexStride: 5, indices: indices);
         }
 
 
@@ -48,7 +48,7 @@ namespace Sober.Rendering.Mesh
                 -halfWidth, -halfHeight, 0f,   1f,1f,0f,1f, // bottom left
             };
             int[] indices = { 0, 1, 2, 2, 3, 0 };
-            return new Mesh(vertices, indices);
+            return new Mesh(vertices, indices: indices);
         }
 
 
@@ -66,7 +66,7 @@ namespace Sober.Rendering.Mesh
         radius * 0.5f,  -radius * 0.866f, 0f, 0f,1f,1f,1f,   // bottom right
     };
             int[] indices = { 0, 1, 2, 2, 3, 4, 4, 5, 0 };
-            return new Mesh(vertices, indices);
+            return new Mesh(vertices, indices: indices);
         }
 
 
@@ -92,7 +92,7 @@ namespace Sober.Rendering.Mesh
         0.433f,      -0.25f,      0f,     0f,1f,1f,1f,   // right
     };
             int[] indices = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 9, 0, 9, 10, 0, 10, 11, 0, 11, 12, 0, 12, 1 };
-            return new Mesh(vertices, indices);
+            return new Mesh(vertices, indices: indices);
         }
 
     }

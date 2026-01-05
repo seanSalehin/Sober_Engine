@@ -8,33 +8,47 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Shaders\color.frag" />
     <None Remove="Assets\Shaders\color.vert" />
+    <None Remove="Assets\Shaders\pulse.frag" />
+    <None Remove="Assets\Shaders\sprite.frag" />
+    <None Remove="Assets\Shaders\sprite.vert" />
+    <None Remove="Assets\Textures\sprite.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Shaders\color.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\color.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\pulse.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\sprite.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\sprite.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\sprite.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
+    <PackageReference Include="StbImageSharp" Version="2.30.15" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="ECS\" />
     <Folder Include="Input\" />
-    <Folder Include="Scene\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Page Include="Assets\Shaders\color.vert">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Assets\Shaders\color.frag">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Shaders\pulse.frag">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Assets\Shaders\pulse.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

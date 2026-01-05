@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
-using System;
-using System.Security.Cryptography.X509Certificates;
+﻿using OpenTK.Graphics.OpenGL4;
 
 
 namespace Sober.Rendering.Mesh
     {
-        internal class Mesh : IDisposable
+        public class Mesh : IDisposable
         {
             private readonly int _vao;
             private readonly int _vbo;
@@ -19,7 +11,7 @@ namespace Sober.Rendering.Mesh
             private readonly int _vertexCount;
             private readonly bool _hasIndices;
 
-            public Mesh(float[] vertices, int[]? indices = null)
+            public Mesh(float[] vertices,  int vertexStride = 5, int[]? indices = null)
             {
                 _vao = GL.GenVertexArray();
                 _vbo = GL.GenBuffer();
@@ -33,14 +25,15 @@ namespace Sober.Rendering.Mesh
 
                 //Vertex  position 
                 GL.EnableVertexAttribArray(0);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 7 * sizeof(float), 0);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexStride * sizeof(float), 0);
 
-                // vertex colors or texture
+
+                // UV
                 GL.EnableVertexAttribArray(1);
-                GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 7 * sizeof(float), 3 * sizeof(float));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, vertexStride * sizeof(float), 3 * sizeof(float));
 
-                //set up EBO
-                if (indices != null)
+            //set up EBO
+            if (indices != null)
                 {
                     _hasIndices = true;
                     _ebo = GL.GenBuffer();
@@ -51,9 +44,8 @@ namespace Sober.Rendering.Mesh
                 else
                 {
                     _hasIndices = false;
-                    //3 for positions and 4 for colors 
-                    _vertexCount = vertices.Length / 7;
-                }
+                    _vertexCount = vertices.Length / vertexStride;
+            }
                 GL.BindVertexArray(0);
             }
             public void Bind() => GL.BindVertexArray(_vao);

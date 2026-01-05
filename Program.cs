@@ -1,5 +1,8 @@
-﻿using OpenTK.Windowing.Desktop;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
+using OpenTK.Windowing.Desktop;
+using Sober.Engine.Core;
+using Sober.Rendering;
+using Sober.Rendering.Shader;
 
 namespace Sober
 {
@@ -7,14 +10,25 @@ namespace Sober
     {
         static void Main(string[] args)
         {
-            var gws = GameWindowSettings.Default;
-            var nws = new NativeWindowSettings()
+            try
             {
-                Size = new Vector2i(800, 600),
-                Title = "Sober Engine"
-            };
-            using var engine = new Sober.Engine.Core.Engine(gws, nws);
-            engine.Run();
+                var gws = GameWindowSettings.Default;
+                var nws = new NativeWindowSettings()
+                {
+                    Size = new Vector2i(800, 600),
+                    Title = "Sober Engine"
+                };
+                using var engine = new Sober.Engine.Core.Engine(gws, nws);
+                var shader = new ShaderProgram("Assets/Shaders/sprite.vert", "Assets/Shaders/sprite.frag");
+                var spriteRenderer = new SpriteRenderer(shader);
+                engine.Run();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unhandled Exception: " + ex);
+                Console.ReadLine();
+            }
+
         }
     }
 }
