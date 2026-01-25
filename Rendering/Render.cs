@@ -9,7 +9,7 @@ using Sober.Rendering.Shader;
 
 namespace Sober.Rendering
 {
-    internal class Render
+    public class Render
     {
         
         public void BeginFrame()

@@ -6,7 +6,9 @@ using Sober.Rendering;
 using Sober.Rendering.Mesh;
 using Sober.Rendering.Shader;
 using Sober.Scene;
-
+using Sober.ECS;
+using Sober.ECS.Components;
+using Sober.ECS.Systems;
 
 namespace Sober.Engine.Core
 {
@@ -18,9 +20,15 @@ namespace Sober.Engine.Core
         private Mesh _quad;
         private ShaderProgram _colorShader;
         private ShaderProgram _pulseShader;
-        private float _time;
+        private float _time;  // for animation (pulsing effect)
         private SpriteRenderer _spriteRenderer;
         private Texture _spriteTexture;
+        private World _world;
+        private ShaderProgram _spriteShader;
+        private SystemGroup _systems;
+        private TransformSystem _transformSystem;
+        private InputSystem _inputSystem;
+        private RenderSystem _renderSystem;
 
         //Scene
         private Scene.Scene _scene;
@@ -38,6 +46,8 @@ namespace Sober.Engine.Core
             GL.Viewport(0, 0, Size.X, Size.Y);
             base.OnLoad();
             GLContext.Initialize();
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             _render = new Render();
 
             // Shaders 
@@ -52,16 +62,26 @@ namespace Sober.Engine.Core
 
 
             // Load sprite shader
-            var spriteShader = new ShaderProgram(
-                    "Assets/Shaders/sprite.vert",
-                    "Assets/Shaders/sprite.frag"
-                );
+            _spriteShader = new ShaderProgram("Assets/Shaders/sprite.vert", "Assets/Shaders/sprite.frag");
 
             // Create sprite renderer
-            _spriteRenderer = new SpriteRenderer(spriteShader);
+            _spriteRenderer = new SpriteRenderer(_spriteShader);
 
             // Load texture
             _spriteTexture = new Texture("Assets/Textures/sprite.png");
+
+            //ECS
+            _world = new World();
+
+            //ECS Systems
+            _systems = new SystemGroup();
+            _transformSystem = new TransformSystem(_world);
+            _inputSystem = new InputSystem();
+            _renderSystem = new RenderSystem(_world, _render, _spriteRenderer);
+            _systems.Add(_inputSystem);
+            _systems.Add(_transformSystem);
+            _systems.Add(_renderSystem);
+
 
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -78,13 +98,61 @@ namespace Sober.Engine.Core
             _child.Transform.SetParent(_parent.Transform, keepWorld: false);
             _scene.Add(_parent);
             _scene.Add(_child);
+
+
+            //Entity samples (create entities in the ECS world)
+
+            // Triangle entity
+            var tri = _world.CreateEntity();
+            _world.Add(tri, TransformComponent.Default());
+            var triT = _world.GetStore<TransformComponent>().Get(tri.Id);
+            triT.LocalPosition = new Vector2(-0.6f, 0.0f);
+            triT.LocalScale = new Vector2(0.6f, 0.6f);
+            triT.Dirty = true;
+            _world.GetStore<TransformComponent>().Set(tri.Id, triT);
+
+            _world.Add(tri, new MeshRendererComponent(
+                MeshFactory.CreateTriangle(),
+                _colorShader
+            ));
+
+            // Pulse quad entity
+            var pulse = _world.CreateEntity();
+            _world.Add(pulse, TransformComponent.Default());
+            var pT = _world.GetStore<TransformComponent>().Get(pulse.Id);
+            pT.LocalPosition = new Vector2(0.6f, 0.0f);
+            pT.LocalScale = new Vector2(0.5f, 0.5f);
+            pT.Dirty = true;
+            _world.GetStore<TransformComponent>().Set(pulse.Id, pT);
+
+            _world.Add(pulse, new MeshRendererComponent(
+                MeshFactory.CreateQuad(),
+                _pulseShader
+            ));
+
+            // Sprite entity (cat)
+            var cat = _world.CreateEntity();
+            _world.Add(cat, TransformComponent.Default());
+            var cT = _world.GetStore<TransformComponent>().Get(cat.Id);
+            cT.LocalPosition = new Vector2(0.0f, -0.2f);
+            cT.LocalScale = new Vector2(0.7f, 0.7f);
+            cT.Dirty = true;
+            _world.GetStore<TransformComponent>().Set(cat.Id, cT);
+
+            _world.Add(cat, new SpriteComponent(_spriteTexture));
         }
+        
 
         protected override void OnUpdateFrame(OpenTK.Windowing.Common.FrameEventArgs args)
         {
             //update loop => changes frame in the game world
             base.OnUpdateFrame(args);
             _time += (float)args.Time;
+
+            //animation for pulse shader
+            _pulseShader.Bind();
+            _pulseShader.SetFloat("u_Time", _time);
+            _systems.Update((float)args.Time);
 
             //Scene
             _parent.Transform.LocalRotation += (float)args.Time;
@@ -95,37 +163,8 @@ namespace Sober.Engine.Core
             //render loop => called every frame, after OnUpdateFrame(), Prepares the screen for rendering new objects
             base.OnRenderFrame(args);
             _render.BeginFrame();
-
-            //Triangle Test
-            _render.Draw(
-                _triangle,
-                _colorShader,
-                Matrix4.CreateScale(0.3f) *
-                Matrix4.CreateTranslation(-0.6f, 0.4f, 0f)
-                );
-
-            //Square test
-            _pulseShader.Bind();
-            _pulseShader.SetFloat("u_Time", _time);
-            _render.Draw(
-                    _quad,
-                    _pulseShader,
-                    Matrix4.CreateScale(0.3f) *
-                    Matrix4.CreateTranslation(0.6f, 0.4f, 0f)
-                );
-
-
-            //Draw Sprite (.png)
-            _spriteRenderer.Draw(_spriteTexture, new Vector2(-0.25f, -0.25f), new Vector2(0.5f, 0.5f));
-
-            _render.EndFrame();
+            _systems.Render();
             SwapBuffers();
-
-
-            //Scene
-            _spriteRenderer.Draw(_spriteTexture, _parent.Transform.WorldMatrix);
-            _spriteRenderer.Draw(_spriteTexture, _child.Transform.WorldMatrix);
-
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -138,12 +177,10 @@ namespace Sober.Engine.Core
 
         protected override void OnUnload()
         {
-            _triangle.Dispose();
-            _quad.Dispose();
             _colorShader.Dispose();
             _pulseShader.Dispose();
+            _spriteShader.Dispose();
             _spriteTexture.Dispose();
-            _spriteRenderer = null;
             base.OnUnload();
         }
 
