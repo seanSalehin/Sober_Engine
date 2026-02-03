@@ -5,6 +5,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using MeshType = Sober.Rendering.Mesh.Mesh;
 using Sober.Rendering.Shader;
+using Sober.ECS.Systems;
 
 
 namespace Sober.Rendering
@@ -23,6 +24,7 @@ namespace Sober.Rendering
             shader.Bind();
             mesh.Bind();
             shader.SetMatrix4("u_Model", model ?? Matrix4.Identity);
+            shader.SetMatrix4("u_ViewProj", CameraSystem.CurrentViewProj);
             mesh.Draw();
             mesh.Unbind();
             shader.UnBind();

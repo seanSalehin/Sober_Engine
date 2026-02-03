@@ -9,6 +9,8 @@ using Sober.Scene;
 using Sober.ECS;
 using Sober.ECS.Components;
 using Sober.ECS.Systems;
+using Sober.Engine.Core;
+using Sober.Engine.Input;
 
 namespace Sober.Engine.Core
 {
@@ -29,6 +31,12 @@ namespace Sober.Engine.Core
         private TransformSystem _transformSystem;
         private InputSystem _inputSystem;
         private RenderSystem _renderSystem;
+
+        //ECS Systems
+        private MovementSystem _movementSystem;
+        private CameraSystem _cameraSystem;
+        private int _playerEntityId;
+        private int _cameraEntityId;
 
         //Scene
         private Scene.Scene _scene;
@@ -76,11 +84,17 @@ namespace Sober.Engine.Core
             //ECS Systems
             _systems = new SystemGroup();
             _transformSystem = new TransformSystem(_world);
-            _inputSystem = new InputSystem();
+            _inputSystem = new InputSystem(_world);
             _renderSystem = new RenderSystem(_world, _render, _spriteRenderer);
+            _movementSystem = new MovementSystem(_world);
+            _cameraSystem = new CameraSystem(_world);
+
             _systems.Add(_inputSystem);
             _systems.Add(_transformSystem);
             _systems.Add(_renderSystem);
+            _systems.Add(_movementSystem);
+            _systems.Add(_cameraSystem);
+
 
 
             GL.Enable(EnableCap.Blend);
@@ -132,20 +146,30 @@ namespace Sober.Engine.Core
 
             // Sprite entity (cat)
             var cat = _world.CreateEntity();
+            _playerEntityId = cat.Id;
             _world.Add(cat, TransformComponent.Default());
             var cT = _world.GetStore<TransformComponent>().Get(cat.Id);
             cT.LocalPosition = new Vector2(0.0f, -0.2f);
             cT.LocalScale = new Vector2(0.7f, 0.7f);
             cT.Dirty = true;
             _world.GetStore<TransformComponent>().Set(cat.Id, cT);
-
             _world.Add(cat, new SpriteComponent(_spriteTexture));
+            _world.Add(cat, new PlayerTag());
+            _world.Add(cat, new VelocityComponent(speed: 1.2f));
+
+            //Camera entity
+            var cam = _world.CreateEntity();
+            _cameraEntityId = cam.Id;
+            _world.Add(cam, CameraComponent.Default());
+            _world.Add(cam, new CameraFollowComponent(_playerEntityId));
         }
-        
+
 
         protected override void OnUpdateFrame(OpenTK.Windowing.Common.FrameEventArgs args)
         {
             //update loop => changes frame in the game world
+            Time.Update((float)args.Time);
+            Input.Input.Update(KeyboardState, MouseState);
             base.OnUpdateFrame(args);
             _time += (float)args.Time;
 
