@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sober.Rendering;
+﻿using Sober.Rendering;
 using Sober.Rendering.Shader;
 
 namespace Sober.Assets
@@ -11,34 +6,38 @@ namespace Sober.Assets
     public static class AssetManager
     {
         //maps a string key (Player) to a Texture and a ShaderProgram
-        private static Dictionary<string, Texture> texture = new();
-        private static Dictionary<string, ShaderProgram> shaders = new();
+        private static readonly Dictionary<string, Texture> _textures = new();
+        private static readonly Dictionary<string, ShaderProgram> _shaders = new();
 
-        public static Texture LoadTexture(string key, string path)
+        //load a texture
+        public static Texture GetTexture(string key, string path)
         {
-            //Loading a texture
-            if (!texture.ContainsKey(key))
-                texture[key] = new Texture(path);
-
-            return texture[key];
+            if (!_textures.TryGetValue(key, out var tex))
+            {
+                tex = new Texture(path);
+                _textures[key] = tex;
+            }
+            return tex;
         }
 
-        public static ShaderProgram LoadShader(string key, string vert, string frag)
+        //load a shader
+        public static ShaderProgram GetShader(string key, string vert, string frag)
         {
-            //Loading a shader
-            if (!shaders.ContainsKey(key))
-                shaders[key] = new ShaderProgram(vert, frag);
-
-            return shaders[key];
+            if (!_shaders.TryGetValue(key, out var sh))
+            {
+                sh = new ShaderProgram(vert, frag);
+                _shaders[key] = sh;
+            }
+            return sh;
         }
 
-        public static void Clear()
+        public static void ClearAll()
         {
-            foreach (var tex in texture.Values)
-                tex.Dispose();
+            foreach (var t in _textures.Values) t.Dispose();
+            foreach (var s in _shaders.Values) s.Dispose();
 
-            texture.Clear();
-            shaders.Clear();
+            _textures.Clear();
+            _shaders.Clear();
         }
     }
 }

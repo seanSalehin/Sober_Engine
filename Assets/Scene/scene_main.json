@@ -1,0 +1,57 @@
+{
+    "name": "MainScene",
+    "assets": {
+        "textures": {
+            "cat": "Assets/Textures/sprite.png"
+        },
+        "shaders": {
+            "color": {
+                "vert": "Assets/Shaders/color.vert",
+                "frag": "Assets/Shaders/color.frag"
+            },
+            "pulse": {
+                "vert": "Assets/Shaders/color.vert",
+                "frag": "Assets/Shaders/pulse.frag"
+            },
+            "sprite": {
+                "vert": "Assets/Shaders/sprite.vert",
+                "frag": "Assets/Shaders/sprite.frag"
+            }
+        }
+    },
+    "entities": [
+        {
+            "name": "Player",
+            "prefab": "player_cat"
+        },
+        {
+            "name": "MainCamera",
+            "prefab": "camera_follow"
+        },
+
+        {
+            "name": "TriangleLeft",
+            "transform": {
+                "position": [ -0.8, 0.2 ],
+                "rotation": 0.0,
+                "scale": [ 0.6, 0.6 ]
+            },
+            "mesh": {
+                "mesh": "Triangle",
+                "shaderKey": "color"
+            }
+        },
+        {
+            "name": "PulseRight",
+            "transform": {
+                "position": [ 0.8, 0.2 ],
+                "rotation": 0.0,
+                "scale": [ 0.5, 0.5 ]
+            },
+            "mesh": {
+                "mesh": "Quad",
+                "shaderKey": "pulse"
+            }
+        }
+    ]
+}

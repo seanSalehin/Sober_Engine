@@ -1,10 +1,4 @@
 ﻿//Create / destroy entities, add / remove components, Register & update systems, Run queries.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Sober.ECS
 {
     public sealed class World

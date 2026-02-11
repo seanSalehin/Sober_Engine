@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 
 namespace Sober.Scene
 {
@@ -103,9 +98,10 @@ namespace Sober.Scene
         {
             Matrix4 currentWorld = WorldMatrix;
             _parent?._child.Remove(this);
+            _parent = newParent;
             _parent?._child.Add(this);
 
-            if(keepWorld)
+            if (keepWorld)
             {
                 Matrix4 parentWorld = _parent?.WorldMatrix ?? Matrix4.Identity;
                 Matrix4 invParent = parentWorld.Inverted();

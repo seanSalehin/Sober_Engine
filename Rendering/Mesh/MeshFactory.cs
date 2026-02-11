@@ -1,7 +1,4 @@
-﻿using System;
-
-
-namespace Sober.Rendering.Mesh
+﻿namespace Sober.Rendering.Mesh
 {
     internal static class MeshFactory
     {

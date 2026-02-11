@@ -1,11 +1,4 @@
 ﻿//Filters entities by component combinations (two components TA and TB)
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Sober.ECS
 {
     public static class Query

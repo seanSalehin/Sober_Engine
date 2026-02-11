@@ -1,0 +1,45 @@
+{
+    "name": "TestScene",
+    "assets": {
+        "textures": {
+            "cat": "Assets/Textures/sprite.png"
+        },
+        "shaders": {
+            "color": {
+                "vert": "Assets/Shaders/color.vert",
+                "frag": "Assets/Shaders/color.frag"
+            },
+            "pulse": {
+                "vert": "Assets/Shaders/color.vert",
+                "frag": "Assets/Shaders/pulse.frag"
+            },
+            "sprite": {
+                "vert": "Assets/Shaders/sprite.vert",
+                "frag": "Assets/Shaders/sprite.frag"
+            }
+        }
+    },
+    "entities": [
+        {
+            "name": "Player",
+            "prefab": "player_cat"
+        },
+        {
+            "name": "MainCamera",
+            "prefab": "camera_follow"
+        },
+
+        {
+            "name": "TriangleCenter",
+            "transform": {
+                "position": [ 0.0, 0.4 ],
+                "rotation": 0.0,
+                "scale": [ 0.9, 0.9 ]
+            },
+            "mesh": {
+                "mesh": "Triangle",
+                "shaderKey": "color"
+            }
+        }
+    ]
+}

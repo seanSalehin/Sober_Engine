@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sober.Engine.Input
@@ -15,6 +10,7 @@ namespace Sober.Engine.Input
         private static MouseState _ms;
         private static KeyboardState _prevKb;
         private static MouseState _prevMs;
+        private static bool _initialized;
 
         public static Vector2 MousePosition => new Vector2(_ms.X, _ms.Y);
         public static Vector2 MouseDelta => new Vector2(_ms.X - _prevMs.X, _ms.Y - _prevMs.Y);
@@ -22,6 +18,13 @@ namespace Sober.Engine.Input
 
         public static void Update(KeyboardState kb, MouseState ms)
         {
+            if (!_initialized)
+            {
+                _kb = _prevKb = kb;
+                _ms = _prevMs = ms;
+                _initialized = true;
+                return;
+            }
             _prevKb = _kb;
             _prevMs = _ms;
             _kb = kb;
@@ -33,15 +36,14 @@ namespace Sober.Engine.Input
         {
             return _kb.IsKeyDown(key);
         }
-        public static void Pressed(Keys key)
+        public static bool Pressed(Keys key)
         {
-            if (_kb.IsKeyDown(key) && !_prevKb.IsKeyDown(key))
-                return;
+            return _kb.IsKeyDown(key) && !_prevKb.IsKeyDown(key);
         }
-        public static void Released(Keys key)
+
+        public static bool Released(Keys key)
         {
-            if (!_kb.IsKeyDown(key) && _prevKb.IsKeyDown(key))
-                return;
+            return !_kb.IsKeyDown(key) && _prevKb.IsKeyDown(key);
         }
         public static bool MouseDown(MouseButton button)
         {

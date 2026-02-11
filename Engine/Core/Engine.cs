@@ -7,10 +7,9 @@ using Sober.Rendering.Mesh;
 using Sober.Rendering.Shader;
 using Sober.Scene;
 using Sober.ECS;
-using Sober.ECS.Components;
 using Sober.ECS.Systems;
-using Sober.Engine.Core;
-using Sober.Engine.Input;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using Sober.Assets;
 
 namespace Sober.Engine.Core
 {
@@ -31,6 +30,8 @@ namespace Sober.Engine.Core
         private TransformSystem _transformSystem;
         private InputSystem _inputSystem;
         private RenderSystem _renderSystem;
+        private SceneManager _sceneManager;
+
 
         //ECS Systems
         private MovementSystem _movementSystem;
@@ -113,55 +114,9 @@ namespace Sober.Engine.Core
             _scene.Add(_parent);
             _scene.Add(_child);
 
-
-            //Entity samples (create entities in the ECS world)
-
-            // Triangle entity
-            var tri = _world.CreateEntity();
-            _world.Add(tri, TransformComponent.Default());
-            var triT = _world.GetStore<TransformComponent>().Get(tri.Id);
-            triT.LocalPosition = new Vector2(-0.6f, 0.0f);
-            triT.LocalScale = new Vector2(0.6f, 0.6f);
-            triT.Dirty = true;
-            _world.GetStore<TransformComponent>().Set(tri.Id, triT);
-
-            _world.Add(tri, new MeshRendererComponent(
-                MeshFactory.CreateTriangle(),
-                _colorShader
-            ));
-
-            // Pulse quad entity
-            var pulse = _world.CreateEntity();
-            _world.Add(pulse, TransformComponent.Default());
-            var pT = _world.GetStore<TransformComponent>().Get(pulse.Id);
-            pT.LocalPosition = new Vector2(0.6f, 0.0f);
-            pT.LocalScale = new Vector2(0.5f, 0.5f);
-            pT.Dirty = true;
-            _world.GetStore<TransformComponent>().Set(pulse.Id, pT);
-
-            _world.Add(pulse, new MeshRendererComponent(
-                MeshFactory.CreateQuad(),
-                _pulseShader
-            ));
-
-            // Sprite entity (cat)
-            var cat = _world.CreateEntity();
-            _playerEntityId = cat.Id;
-            _world.Add(cat, TransformComponent.Default());
-            var cT = _world.GetStore<TransformComponent>().Get(cat.Id);
-            cT.LocalPosition = new Vector2(0.0f, -0.2f);
-            cT.LocalScale = new Vector2(0.7f, 0.7f);
-            cT.Dirty = true;
-            _world.GetStore<TransformComponent>().Set(cat.Id, cT);
-            _world.Add(cat, new SpriteComponent(_spriteTexture));
-            _world.Add(cat, new PlayerTag());
-            _world.Add(cat, new VelocityComponent(speed: 1.2f));
-
-            //Camera entity
-            var cam = _world.CreateEntity();
-            _cameraEntityId = cam.Id;
-            _world.Add(cam, CameraComponent.Default());
-            _world.Add(cam, new CameraFollowComponent(_playerEntityId));
+            //Scene management
+            _sceneManager = new SceneManager(_world, _render, _spriteRenderer);
+            _sceneManager.LoadScene("Assets/Scene/scene_main.json");
         }
 
 
@@ -178,9 +133,20 @@ namespace Sober.Engine.Core
             _pulseShader.SetFloat("u_Time", _time);
             _systems.Update((float)args.Time);
 
-            //Scene
+            //Scenes
             _parent.Transform.LocalRotation += (float)args.Time;
+
+            //Scene management
+            if(Sober.Engine.Input.Input.Down(Keys.F1))
+            {
+                _sceneManager.LoadScene("Assets/Scene/scene_main.json");
+            }
+           if(Sober.Engine.Input.Input.Down(Keys.F2))
+            {
+                    _sceneManager.LoadScene("Assets/Scene/scene_test.json");
+            }
         }
+
 
         protected override void OnRenderFrame(OpenTK.Windowing.Common.FrameEventArgs args)
         {
@@ -205,6 +171,7 @@ namespace Sober.Engine.Core
             _pulseShader.Dispose();
             _spriteShader.Dispose();
             _spriteTexture.Dispose();
+            AssetManager.ClearAll();
             base.OnUnload();
         }
 

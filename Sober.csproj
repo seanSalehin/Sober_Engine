@@ -8,15 +8,32 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Prefabs\camera_follow.json" />
+    <None Remove="Assets\Prefabs\player_cat.json" />
+    <None Remove="Assets\Scene\scene_main.json" />
+    <None Remove="Assets\Scene\scene_test.json" />
     <None Remove="Assets\Shaders\color.frag" />
     <None Remove="Assets\Shaders\color.vert" />
     <None Remove="Assets\Shaders\pulse.frag" />
+    <None Remove="Assets\Shaders\pulse.vert" />
     <None Remove="Assets\Shaders\sprite.frag" />
     <None Remove="Assets\Shaders\sprite.vert" />
     <None Remove="Assets\Textures\sprite.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\Prefabs\camera_follow.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Prefabs\player_cat.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Scene\scene_main.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Scene\scene_test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Shaders\color.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -24,6 +41,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Shaders\pulse.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\pulse.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Shaders\sprite.frag">
@@ -41,12 +61,6 @@
     <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Assets\Shaders\pulse.vert">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using StbImageSharp;
-using System.IO;
 
 
 namespace Sober.Rendering
