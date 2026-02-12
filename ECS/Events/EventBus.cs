@@ -1,4 +1,4 @@
-﻿//message system
+﻿//message system for when collision happens
 namespace Sober.ECS.Events
 {
     public sealed class EventBus
@@ -15,7 +15,7 @@ namespace Sober.ECS.Events
             list.Add(handler);
         }
 
-        //notify everyone who subscribed to T When an event of type T happens
+        //notify every system taht subscribed 
         public void Publish<T>(T evt)
         {
             var Type = typeof(T);

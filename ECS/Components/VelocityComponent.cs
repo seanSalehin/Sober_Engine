@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 
 
 namespace Sober.ECS.Components
@@ -12,12 +7,7 @@ namespace Sober.ECS.Components
     {
         //speed of our entity
         public Vector2 Velocity;
-        public float Speed;
-
-        public VelocityComponent( float speed)
-        {
-            Velocity = Vector2.Zero; ;
-            Speed = speed;
-        }
-    }
+        public VelocityComponent(Vector2 v) => Velocity = v;
+    
+}
 }

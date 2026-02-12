@@ -2,25 +2,36 @@
 {
     public static class Time
     {
-        public static float DeltaTime { get; set; }
-        public static float TotalTIme { get; set; }
-        public static float FixedDeltaTime { get; set; } = 1f / 60f;
-        public static float Accumulator { get; private set; }
+        //time of this frame - time of last frame
+        public static float DeltaTime { get; private set; }
+        //how long the game has been running
+        public static float TotalTime { get; private set; }
+        //60 FPS
+        public static float FixedDeltaTime { get; private set; } = 1f / 60f;
+        private static float _accumulator;
+
         public static void Update(float dt)
         {
-             TotalTIme += dt;
-            Accumulator += dt;
             DeltaTime = dt;
-          }
+            TotalTime += dt;
+            _accumulator += dt;
+
+            if (_accumulator > 0.25f) _accumulator = 0.25f;
+        }
+
         public static bool ConsumeFixedStep()
         {
-            if (Accumulator  >= FixedDeltaTime)
+            if (_accumulator >= FixedDeltaTime)
             {
-                Accumulator -= FixedDeltaTime;
+                _accumulator -= FixedDeltaTime;
                 return true;
             }
             return false;
         }
+        //updating FPS 
+        public static void SetFixedHz(float hz)
+        {
+            FixedDeltaTime = 1f / hz;
+        }
     }
-
 }
