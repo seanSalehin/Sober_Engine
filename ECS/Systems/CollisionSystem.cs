@@ -31,7 +31,7 @@ namespace Sober.ECS.Systems
             {
                 if (!stateStore.Has(element.Key))
                 {
-                    stateStore.Set(element.Key, new CollisionStateComponent());
+                    stateStore.Set(element.Key, CollisionStateComponent.Create());
                 }
             }
 
@@ -39,7 +39,7 @@ namespace Sober.ECS.Systems
             {
                 if (!stateStore.Has(element.Key))
                 {
-                    stateStore.Set(element.Key, new CollisionStateComponent());
+                    stateStore.Set(element.Key, CollisionStateComponent.Create());
                 }
             }
 

@@ -1,18 +1,15 @@
-﻿//keyboard/mouse/gamepad
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Windowing.GraphicsLibraryFramework;
+﻿using OpenTK.Windowing.GraphicsLibraryFramework;
 using Sober.ECS.Components;
 using Sober.Engine.Input;
+using OpenTK.Mathematics;
+
+
 
 namespace Sober.ECS.Systems
 {
     public sealed class InputSystem : ISystem
     {
+        //keyboard/mouse/gamepad
         public readonly World _world;
 
         public InputSystem(World world)
@@ -62,13 +59,13 @@ namespace Sober.ECS.Systems
                 }
 
                 //diagonal speed = straight speed
-                if (dir.LengthSquared() > 0)
+                if (dir.LengthSquared > 0)
                 {
                     dir = Vector2.Normalize(dir);
                 }
 
                 //converts direction into actual movement speed.
-                vel.Velocity = (OpenTK.Mathematics.Vector2)(dir * vel.Speed);
+                vel.Velocity = dir * vel.Speed;
                 vStore.Set(id, vel);
             }
         }

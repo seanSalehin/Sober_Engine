@@ -2,14 +2,19 @@
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using Sober.Assets;
+using Sober.ECS;
+using Sober.ECS.Components;
+using Sober.ECS.Events;
+using Sober.ECS.Systems;
+using Sober.ECS.Systems;
+using Sober.Engine.Core;
 using Sober.Rendering;
+using Sober.Rendering.Debug;
 using Sober.Rendering.Mesh;
 using Sober.Rendering.Shader;
 using Sober.Scene;
-using Sober.ECS;
-using Sober.ECS.Systems;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using Sober.Assets;
 
 namespace Sober.Engine.Core
 {
@@ -17,10 +22,6 @@ namespace Sober.Engine.Core
     {
 
         private Render _render;
-        private Mesh _triangle;
-        private Mesh _quad;
-        private ShaderProgram _colorShader;
-        private ShaderProgram _pulseShader;
         private float _time;  // for animation (pulsing effect)
         private SpriteRenderer _spriteRenderer;
         private Texture _spriteTexture;
@@ -44,6 +45,15 @@ namespace Sober.Engine.Core
         private GameObject _parent;
         private GameObject _child;
 
+
+        //Physics + collision + Debug + FPS
+        private PhysicsSystem _physicsSystem;
+        private CollisionSystem _collisionSystem;
+        private DebugDraw _debugDraw;
+        private DebugDrawSystem _debugDrawSystem;
+        private FpsSystem _fpsSystem;
+        private EventBus _eventBus;
+
         //GameWindowSettings => update frequency, render frequency
         //NativeWindowSettings => window size, title
         public Engine(GameWindowSettings gws, NativeWindowSettings nws) : base(gws, nws) { }
@@ -58,17 +68,6 @@ namespace Sober.Engine.Core
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             _render = new Render();
-
-            // Shaders 
-            _colorShader = new ShaderProgram("Assets/Shaders/color.vert",
-                                 "Assets/Shaders/color.frag");
-            _pulseShader = new ShaderProgram("Assets/Shaders/color.vert",
-                                 "Assets/Shaders/pulse.frag");
-
-            // Create meshes
-            _triangle = MeshFactory.CreateTriangle();
-            _quad = MeshFactory.CreateQuad();
-
 
             // Load sprite shader
             _spriteShader = new ShaderProgram("Assets/Shaders/sprite.vert", "Assets/Shaders/sprite.frag");
@@ -117,34 +116,58 @@ namespace Sober.Engine.Core
             //Scene management
             _sceneManager = new SceneManager(_world, _render, _spriteRenderer);
             _sceneManager.LoadScene("Assets/Scene/scene_main.json");
+
+            //Test scene with physics and collision
+            SpawnTestGroundAndPlayer();
+            VSync = VSyncMode.On;
+
+            //Physics + collision + Debug + FPS
+            _eventBus = new EventBus();
+            _physicsSystem = new PhysicsSystem(_world);
+            _collisionSystem = new CollisionSystem(_world, _eventBus);
+            _debugDraw = new DebugDraw();
+            _debugDrawSystem = new DebugDrawSystem(_world, _debugDraw);
+             _fpsSystem = new FpsSystem(title => Title=title);
         }
 
 
-        protected override void OnUpdateFrame(OpenTK.Windowing.Common.FrameEventArgs args)
+        protected override void OnUpdateFrame(FrameEventArgs args)
         {
             //update loop => changes frame in the game world
             Time.Update((float)args.Time);
             Input.Input.Update(KeyboardState, MouseState);
-            base.OnUpdateFrame(args);
-            _time += (float)args.Time;
 
-            //animation for pulse shader
-            _pulseShader.Bind();
-            _pulseShader.SetFloat("u_Time", _time);
+            //debug (for collision) + fps
+            _debugDrawSystem.Update();
+            _fpsSystem.Update((float)args.Time);
+
+            base.OnUpdateFrame(args);
+          
+
             _systems.Update((float)args.Time);
 
             //Scenes
             _parent.Transform.LocalRotation += (float)args.Time;
 
             //Scene management
-            if(Sober.Engine.Input.Input.Down(Keys.F1))
+            if(Input.Input.Down(Keys.F1))
             {
                 _sceneManager.LoadScene("Assets/Scene/scene_main.json");
             }
-           if(Sober.Engine.Input.Input.Down(Keys.F2))
+            if(Input.Input.Down(Keys.F2))
             {
-                    _sceneManager.LoadScene("Assets/Scene/scene_test.json");
+                _sceneManager.LoadScene("Assets/Scene/scene_test.json");
             }
+
+            //physics + collision 
+            while (Time.ConsumeFixedStep())
+            { 
+                _physicsSystem.FixedUpdate(Time.FixedDeltaTime);
+                _collisionSystem.FixedUpdate(Time.FixedDeltaTime);
+            }
+
+
+
         }
 
 
@@ -154,6 +177,7 @@ namespace Sober.Engine.Core
             base.OnRenderFrame(args);
             _render.BeginFrame();
             _systems.Render();
+            _debugDrawSystem.Render();
             SwapBuffers();
         }
 
@@ -167,13 +191,72 @@ namespace Sober.Engine.Core
 
         protected override void OnUnload()
         {
-            _colorShader.Dispose();
-            _pulseShader.Dispose();
             _spriteShader.Dispose();
             _spriteTexture.Dispose();
             AssetManager.ClearAll();
+            _debugDraw?.Dispose();
             base.OnUnload();
         }
+
+        private void SpawnTestGroundAndPlayer()
+        {
+
+            float gravity = 20.0f;
+
+            Vector2 floorScale = new Vector2(2.0f, 0.18f); 
+            Vector2 floorPos = new Vector2(0f, -0.85f);
+
+            Vector2 wallScale = new Vector2(0.12f, 2.0f);
+            Vector2 leftWallPos = new Vector2(-1.02f, 0f);
+            Vector2 rightWallPos = new Vector2(+1.02f, 0f);
+
+            Vector2 platformScale = new Vector2(0.90f, 0.14f);
+            Vector2 platformPos = new Vector2(0.10f, -0.10f);
+
+            Vector2 blockScale = new Vector2(0.22f, 0.22f);
+            Vector2 blockPos = new Vector2(-0.35f, -0.63f);
+
+            Vector2 playerHalf = new Vector2(0.30f, 0.30f);
+
+            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+
+            var aabbStore = _world.GetStore<AabbColliderComponent>();
+            var gravStore = _world.GetStore<GravityComponent>();
+
+            aabbStore.Set(playerId, new AabbColliderComponent(playerHalf, CollisionLayers.Player, CollisionLayers.World));
+            gravStore.Set(playerId, new GravityComponent(gravity));
+
+            var tStore = _world.GetStore<TransformComponent>();
+            var pt = tStore.Get(playerId);
+            pt.LocalPosition = new Vector2(0f, 0.20f);
+            pt.Dirty = true;
+            tStore.Set(playerId, pt);
+
+            CreateStaticBox("FLOOR", floorPos, floorScale);
+            CreateStaticBox("LEFT_WALL", leftWallPos, wallScale);
+            CreateStaticBox("RIGHT_WALL", rightWallPos, wallScale);
+            CreateStaticBox("PLATFORM", platformPos, platformScale);
+            CreateStaticBox("OBSTACLE", blockPos, blockScale);
+
+            void CreateStaticBox(string name, Vector2 pos, Vector2 scale)
+            {
+                Vector2 half = new Vector2(scale.X * 0.5f, scale.Y * 0.5f);
+
+                var e = _world.CreateEntity();
+                _world.Add(e, TransformComponent.Default());
+
+                var t = tStore.Get(e.Id);
+                t.LocalPosition = pos;
+                t.LocalScale = scale;
+                t.Dirty = true;
+                tStore.Set(e.Id, t);
+
+                aabbStore.Set(e.Id, new AabbColliderComponent(half, CollisionLayers.World, CollisionLayers.Player));
+                _world.GetStore<StaticBodyTag>().Set(e.Id, new StaticBodyTag());
+
+            }
+        }
+
 
     }
 }

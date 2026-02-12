@@ -5,9 +5,14 @@ namespace Sober.ECS.Components
 {
     public struct VelocityComponent
     {
-        //speed of our entity
+        //speed of the entity
         public Vector2 Velocity;
-        public VelocityComponent(Vector2 v) => Velocity = v;
-    
-}
+        public float Speed;
+        public VelocityComponent(float speed)
+        {
+            Velocity = Vector2.Zero;
+            Speed = speed;
+        }
+
+    }
 }

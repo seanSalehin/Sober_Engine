@@ -12,7 +12,6 @@
             Layer = layer;
             Mask = mask;
             IsTrigger = isTrigger;
-            Halfsize = halfsize;
         }
     }
 }

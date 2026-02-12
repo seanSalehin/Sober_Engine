@@ -19,7 +19,7 @@ namespace Sober.ECS.Systems
             //apply gravity to velocity (movers have velocity)
             foreach (var element in velocityStore.All())
             {
-                int id = 0;
+                int id = element.Key;
                 if(!timeStore.Has(id))
                 {
                     continue;
