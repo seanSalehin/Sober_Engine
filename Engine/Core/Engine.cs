@@ -1,4 +1,9 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//                S O B E R   E N G I N E
+//                     Sean Salehin
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -15,6 +20,7 @@ using Sober.Rendering.Debug;
 using Sober.Rendering.Mesh;
 using Sober.Rendering.Shader;
 using Sober.Scene;
+using Sober.Rendering.Particles;
 
 namespace Sober.Engine.Core
 {
@@ -53,6 +59,14 @@ namespace Sober.Engine.Core
         private DebugDrawSystem _debugDrawSystem;
         private FpsSystem _fpsSystem;
         private EventBus _eventBus;
+
+
+        //Particle system
+        private ParticlePool _particlePool;
+        private PartickeRenderer _particleRenderer;
+        private ShaderProgram _particleShader;
+        private ParticleSystem _particleSystem;
+        private ParticleRenderSystem _particleRendereSystem;
 
         //GameWindowSettings => update frequency, render frequency
         //NativeWindowSettings => window size, title
@@ -128,7 +142,48 @@ namespace Sober.Engine.Core
             _debugDraw = new DebugDraw();
             _debugDrawSystem = new DebugDrawSystem(_world, _debugDraw);
              _fpsSystem = new FpsSystem(title => Title=title);
+
+            //Particle system
+            _particleShader = new ShaderProgram("Assets/Shaders/particle.vert", "Assets/Shaders/particle.frag");
+                _particleRenderer = new PartickeRenderer(maxParticles: 8000);
+                _particlePool = new ParticlePool(capacity: 8000);
+                _particleSystem = new ParticleSystem(_world, _particlePool);
+                _particleRendereSystem = new ParticleRenderSystem(_world, _particlePool, _particleRenderer, _particleShader);
+                _systems.Add(_particleSystem);
+                _systems.Add(_particleRendereSystem);
+
+
+            //emitter test
+            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+            _world.GetStore<ParticleEmitterComponent>().Set(
+                playerId,
+                new ParticleEmitterComponent(
+                            rate: 120f,
+                            lifeMin: 0.25f, lifeMax: 0.6f,
+                            speedMin: 0.2f, speedMax: 1.2f,
+                            sizeMin: 6f, sizeMax: 15f,
+                            color: new Vector4(0.3f, 0.7f, 1f, 1f)
+                       )
+                );
+            var emitStore = _world.GetStore<ParticleEmitterComponent>();
+            var emit = emitStore.Get(playerId);
+            emit.Enabled = false;
+            emitStore.Set(playerId, emit);
         }
+
+
+        private void SpawnBurst(Vector2 pos, int count, BurstType type)
+        {
+            var e = _world.CreateEntity();
+
+            var t = TransformComponent.Default();
+            t.LocalPosition = pos;
+            t.Dirty = true;
+
+            _world.Add(e, t);
+            _world.Add(e, new ParticleBurstRequest(count, type));
+        }
+
 
 
         protected override void OnUpdateFrame(FrameEventArgs args)
@@ -136,6 +191,17 @@ namespace Sober.Engine.Core
             //update loop => changes frame in the game world
             Time.Update((float)args.Time);
             Input.Input.Update(KeyboardState, MouseState);
+
+            //burst logic => space 
+            if(Input.Input.Down(Keys.Space))
+            {
+                int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+                var playerT = _world.GetStore<TransformComponent>().Get(playerId);
+
+                SpawnBurst(playerT.LocalPosition, 140, BurstType.Flash);
+                SpawnBurst(playerT.LocalPosition, 350, BurstType.Sparks);
+                SpawnBurst(playerT.LocalPosition, 50, BurstType.Smoke);
+            }
 
             //debug (for collision) + fps
             _debugDrawSystem.Update();
@@ -165,9 +231,6 @@ namespace Sober.Engine.Core
                 _physicsSystem.FixedUpdate(Time.FixedDeltaTime);
                 _collisionSystem.FixedUpdate(Time.FixedDeltaTime);
             }
-
-
-
         }
 
 
@@ -187,14 +250,14 @@ namespace Sober.Engine.Core
             GL.Viewport(0, 0, Size.X, Size.Y);
         }
 
-
-
         protected override void OnUnload()
         {
             _spriteShader.Dispose();
             _spriteTexture.Dispose();
             AssetManager.ClearAll();
             _debugDraw?.Dispose();
+            _particleShader?.Dispose();
+            _particleRenderer?.Dispose();
             base.OnUnload();
         }
 
@@ -253,10 +316,7 @@ namespace Sober.Engine.Core
 
                 aabbStore.Set(e.Id, new AabbColliderComponent(half, CollisionLayers.World, CollisionLayers.Player));
                 _world.GetStore<StaticBodyTag>().Set(e.Id, new StaticBodyTag());
-
             }
         }
-
-
     }
 }
