@@ -20,7 +20,13 @@
     <None Remove="Assets\Shaders\pulse.vert" />
     <None Remove="Assets\Shaders\sprite.frag" />
     <None Remove="Assets\Shaders\sprite.vert" />
-    <None Remove="Assets\Textures\sprite.png" />
+	  <None Remove="Assets\Textures\sprite.png" />
+	  <None Remove="Assets\Textures\particle.vert" />
+	  <None Remove="Assets\Textures\particle.frag" />
+	  <None Remove="Assets\Textures\post.vert" />
+	  <None Remove="Assets\Textures\post.frag" />
+	  <None Remove="Assets\Textures\blur.frag" />
+	  
   </ItemGroup>
 
   <ItemGroup>
@@ -67,6 +73,18 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="Assets\Shaders\particle.vert">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+	  <Content Include="Assets\Shaders\post.vert">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+	  <Content Include="Assets\Shaders\post.frag">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+	  <Content Include="Assets\Shaders\blur.frag">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
   </ItemGroup>

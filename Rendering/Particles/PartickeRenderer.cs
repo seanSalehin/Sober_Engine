@@ -42,19 +42,49 @@ namespace Sober.Rendering.Particles
         }
 
 
-        public void Draw (ParticlePool pool, int aliveCount, Matrix4 viewProject, int shaderProgramId)
+        public void Draw(ParticlePool pool, int aliveCount, Matrix4 viewProject, int shaderProgramId)
         {
-            int write = 0;
+            GL.UseProgram(shaderProgramId);
+
+            int locViewProj = GL.GetUniformLocation(shaderProgramId, "u_ViewProj");
+            if (locViewProj != -1)
+                GL.UniformMatrix4(locViewProj, false, ref viewProject);
+
+            GL.BindVertexArray(_vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
+            GL.Enable(EnableCap.Blend);
+
+            // PASS 1: Additive (Sparks + Flash)
+            DrawPass(pool, aliveCount, additive: true);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+            GL.DrawArrays(PrimitiveType.Points, 0, _lastCount);
+
+            // PASS 2: Alpha (Smoke)
+            DrawPass(pool, aliveCount, additive: false);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.DrawArrays(PrimitiveType.Points, 0, _lastCount);
+
+            GL.BindVertexArray(0);
+        }
+
+        private int _lastCount;
+
+        private void DrawPass(ParticlePool pool, int aliveCount, bool additive)
+        {
             var particles = pool.Raw;
             var alive = pool.ALive;
 
-            if (aliveCount <= 0) return;
-            
-            for(int i = 0;  i< aliveCount; i++)
+            int write = 0;
+
+            for (int i = 0; i < aliveCount; i++)
             {
                 int index = alive[i];
                 ref var p = ref particles[index];
-                if(!p.Alive) continue;
+                if (!p.Alive) continue;
+
+                bool isAdd = (p.Kind == ParticleKind.Spark) || (p.Kind == ParticleKind.Flash);
+                if (isAdd != additive) continue;
+
                 _cpu[write++] = p.Position.X;
                 _cpu[write++] = p.Position.Y;
                 _cpu[write++] = p.Color.X;
@@ -63,33 +93,14 @@ namespace Sober.Rendering.Particles
                 _cpu[write++] = p.Color.W;
                 _cpu[write++] = p.Size;
             }
+
             int floatsUsed = write;
             int bytesUsed = floatsUsed * sizeof(float);
-            int count = floatsUsed / 7;
+            _lastCount = floatsUsed / 7;
 
-            GL.UseProgram(shaderProgramId);
-
-            int locaction_veiwProj = GL.GetUniformLocation(shaderProgramId, "u_ViewProj");
-            if(locaction_veiwProj != -1)
-            {
-                GL.UniformMatrix4(locaction_veiwProj, false, ref viewProject);
-            }
-
-            GL.BindVertexArray(_vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, bytesUsed, _cpu);
-            GL.Enable(EnableCap.Blend);
-
-            //particles
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
-            GL.DrawArrays(PrimitiveType.Points, 0, count);
-
-            //reset blend state to default
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            GL.DrawArrays(PrimitiveType.Points, 0, count);
-
-            GL.BindVertexArray(0);
         }
+
 
         public void Dispose()
         {

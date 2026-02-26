@@ -17,10 +17,12 @@ using Sober.ECS.Systems;
 using Sober.Engine.Core;
 using Sober.Rendering;
 using Sober.Rendering.Debug;
+using Sober.Rendering.HotReload;
 using Sober.Rendering.Mesh;
+using Sober.Rendering.Particles;
+using Sober.Rendering.PostProcessing;
 using Sober.Rendering.Shader;
 using Sober.Scene;
-using Sober.Rendering.Particles;
 
 namespace Sober.Engine.Core
 {
@@ -28,7 +30,7 @@ namespace Sober.Engine.Core
     {
 
         private Render _render;
-        private float _time;  // for animation (pulsing effect)
+        private float _time; 
         private SpriteRenderer _spriteRenderer;
         private Texture _spriteTexture;
         private World _world;
@@ -67,6 +69,15 @@ namespace Sober.Engine.Core
         private ShaderProgram _particleShader;
         private ParticleSystem _particleSystem;
         private ParticleRenderSystem _particleRendereSystem;
+
+
+        //hot reloaders + Post Processing
+        private ShaderHotReloader _shaderHotReloader;
+        private FrameBuffer _sceneFbo;
+        private ScreenQuad _screenQuad;
+        private ShaderProgram _postShader;
+
+
 
         //GameWindowSettings => update frequency, render frequency
         //NativeWindowSettings => window size, title
@@ -169,6 +180,22 @@ namespace Sober.Engine.Core
             var emit = emitStore.Get(playerId);
             emit.Enabled = false;
             emitStore.Set(playerId, emit);
+
+
+
+
+            //hot reloaders + Post Processing
+            _shaderHotReloader = new ShaderHotReloader("Assets/Shaders");
+            _shaderHotReloader.Track(_spriteShader, "Assets/Shaders/sprite.vert", "Assets/Shaders/sprite.frag");
+            _shaderHotReloader.Track(_particleShader, "Assets/Shaders/particle.vert", "Assets/Shaders/particle.frag");
+            _sceneFbo = new FrameBuffer(Size.X, Size.Y);
+            _screenQuad = new ScreenQuad();
+            _postShader = new ShaderProgram("Assets/Shaders/post.vert", "Assets/Shaders/post.frag");
+            _postShader.Bind();
+            _postShader.SetInt("u_Scene", 0);
+            _postShader.UnBind();
+            _shaderHotReloader.Track(_postShader, "Assets/Shaders/post.vert", "Assets/Shaders/post.frag");
+
         }
 
 
@@ -231,16 +258,30 @@ namespace Sober.Engine.Core
                 _physicsSystem.FixedUpdate(Time.FixedDeltaTime);
                 _collisionSystem.FixedUpdate(Time.FixedDeltaTime);
             }
+
+
+            //hot reloader
+            _shaderHotReloader.PumpReloads();
+
         }
 
 
         protected override void OnRenderFrame(OpenTK.Windowing.Common.FrameEventArgs args)
         {
-            //render loop => called every frame, after OnUpdateFrame(), Prepares the screen for rendering new objects
-            base.OnRenderFrame(args);
+            //post processing
+            _sceneFbo.Bind();
             _render.BeginFrame();
             _systems.Render();
-            _debugDrawSystem.Render();
+            _debugDrawSystem?.Render();
+            _render.EndFrame();
+            _sceneFbo.Unbind(Size.X, Size.Y);
+
+            _postShader.Bind();
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, _sceneFbo.ColorTexture);
+            GL.Disable(EnableCap.DepthTest);
+            _screenQuad.Draw();
+            GL.Enable(EnableCap.DepthTest);
             SwapBuffers();
         }
 
@@ -248,6 +289,9 @@ namespace Sober.Engine.Core
         {
             base.OnResize(e);
             GL.Viewport(0, 0, Size.X, Size.Y);
+
+            //resize framebuffer for post processing
+            _sceneFbo.Resize(Size.X, Size.Y);
         }
 
         protected override void OnUnload()
@@ -258,6 +302,10 @@ namespace Sober.Engine.Core
             _debugDraw?.Dispose();
             _particleShader?.Dispose();
             _particleRenderer?.Dispose();
+            _postShader?.Dispose();
+            _sceneFbo?.Dispose();
+            _shaderHotReloader?.Dispose();
+            _screenQuad?.Dispose();
             base.OnUnload();
         }
 
