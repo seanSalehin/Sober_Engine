@@ -9,12 +9,11 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Sober.Assets;
+using Sober.Audio;
 using Sober.ECS;
 using Sober.ECS.Components;
 using Sober.ECS.Events;
 using Sober.ECS.Systems;
-using Sober.ECS.Systems;
-using Sober.Engine.Core;
 using Sober.Rendering;
 using Sober.Rendering.Debug;
 using Sober.Rendering.HotReload;
@@ -22,7 +21,10 @@ using Sober.Rendering.Mesh;
 using Sober.Rendering.Particles;
 using Sober.Rendering.PostProcessing;
 using Sober.Rendering.Shader;
+using Sober.Rendering.UI;
 using Sober.Scene;
+using Sober.Audio;
+using Sober.Rendering.UI;
 
 namespace Sober.Engine.Core
 {
@@ -77,6 +79,15 @@ namespace Sober.Engine.Core
         private ScreenQuad _screenQuad;
         private ShaderProgram _postShader;
 
+        //UI + HUD
+        private UIRenderer _ui;
+        private Texture _fontTex;
+        private UISystem _uiSystem;
+
+        //Audio
+        private AudioManager _audio;
+        private Entity  _audioEntity;
+        private AudioSystem _audioSystem;
 
 
         //GameWindowSettings => update frequency, render frequency
@@ -132,7 +143,7 @@ namespace Sober.Engine.Core
             _parent.Transform.LocalPosition = new Vector2(-0.2f, -0.2f);
             _parent.Transform.LocalScale = new Vector2(0.6f, 0.6f);
             _child = new GameObject("Child");
-            _child.Transform.LocalPosition = new Vector2(0.8f, 0f); 
+            _child.Transform.LocalPosition = new Vector2(0.8f, 0f);
             _child.Transform.LocalScale = new Vector2(0.6f, 0.6f);
             _child.Transform.SetParent(_parent.Transform, keepWorld: false);
             _scene.Add(_parent);
@@ -152,16 +163,16 @@ namespace Sober.Engine.Core
             _collisionSystem = new CollisionSystem(_world, _eventBus);
             _debugDraw = new DebugDraw();
             _debugDrawSystem = new DebugDrawSystem(_world, _debugDraw);
-             _fpsSystem = new FpsSystem(title => Title=title);
+            _fpsSystem = new FpsSystem(title => Title = title);
 
             //Particle system
             _particleShader = new ShaderProgram("Assets/Shaders/particle.vert", "Assets/Shaders/particle.frag");
-                _particleRenderer = new PartickeRenderer(maxParticles: 8000);
-                _particlePool = new ParticlePool(capacity: 8000);
-                _particleSystem = new ParticleSystem(_world, _particlePool);
-                _particleRendereSystem = new ParticleRenderSystem(_world, _particlePool, _particleRenderer, _particleShader);
-                _systems.Add(_particleSystem);
-                _systems.Add(_particleRendereSystem);
+            _particleRenderer = new PartickeRenderer(maxParticles: 8000);
+            _particlePool = new ParticlePool(capacity: 8000);
+            _particleSystem = new ParticleSystem(_world, _particlePool);
+            _particleRendereSystem = new ParticleRenderSystem(_world, _particlePool, _particleRenderer, _particleShader);
+            _systems.Add(_particleSystem);
+            _systems.Add(_particleRendereSystem);
 
 
             //emitter test
@@ -196,6 +207,33 @@ namespace Sober.Engine.Core
             _postShader.UnBind();
             _shaderHotReloader.Track(_postShader, "Assets/Shaders/post.vert", "Assets/Shaders/post.frag");
 
+
+            //UI + HUD
+
+            _ui = new UIRenderer();
+            _fontTex = new Texture("Assets/Textures/font.png");
+            _uiSystem = new UISystem(_ui, _fontTex, Size.X, Size.Y);
+
+
+            //Audio
+
+            _audio = new AudioManager();
+            _audio.Initialize();
+
+            _audioSystem = new AudioSystem(_world);
+            _systems.Add(_audioSystem);
+
+            AssetManager.GetAudioClip("hit", "Assets/Audio/explosion.wav");
+
+            _audioEntity = _world.CreateEntity();
+            _world.Add(_audioEntity, new AudioSourceComponent
+            {
+                SourceId = _audio.CreateSource(),
+                ClipKey = "hit",
+                Loop = false,
+                Volume = 1f,
+                PlayRequested = false
+            });
         }
 
 
@@ -218,17 +256,6 @@ namespace Sober.Engine.Core
             //update loop => changes frame in the game world
             Time.Update((float)args.Time);
             Input.Input.Update(KeyboardState, MouseState);
-
-            //burst logic => space 
-            if(Input.Input.Down(Keys.Space))
-            {
-                int playerId = _world.GetStore<PlayerTag>().All().First().Key;
-                var playerT = _world.GetStore<TransformComponent>().Get(playerId);
-
-                SpawnBurst(playerT.LocalPosition, 140, BurstType.Flash);
-                SpawnBurst(playerT.LocalPosition, 350, BurstType.Sparks);
-                SpawnBurst(playerT.LocalPosition, 50, BurstType.Smoke);
-            }
 
             //debug (for collision) + fps
             _debugDrawSystem.Update();
@@ -263,6 +290,22 @@ namespace Sober.Engine.Core
             //hot reloader
             _shaderHotReloader.PumpReloads();
 
+
+            //audio (explosion)
+            if (Input.Input.Down(Keys.Space))
+            {
+                var audioStore = _world.GetStore<AudioSourceComponent>();
+                var a = audioStore.Get(_audioEntity.Id);
+                a.PlayRequested = true;
+                audioStore.Set(_audioEntity.Id, a);
+
+                int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+                var playerT = _world.GetStore<TransformComponent>().Get(playerId);
+
+                SpawnBurst(playerT.LocalPosition, 140, BurstType.Flash);
+                SpawnBurst(playerT.LocalPosition, 350, BurstType.Sparks);
+                SpawnBurst(playerT.LocalPosition, 50, BurstType.Smoke);
+            }
         }
 
 
@@ -281,6 +324,7 @@ namespace Sober.Engine.Core
             GL.BindTexture(TextureTarget.Texture2D, _sceneFbo.ColorTexture);
             GL.Disable(EnableCap.DepthTest);
             _screenQuad.Draw();
+            _uiSystem.Render();
             GL.Enable(EnableCap.DepthTest);
             SwapBuffers();
         }
@@ -306,6 +350,10 @@ namespace Sober.Engine.Core
             _sceneFbo?.Dispose();
             _shaderHotReloader?.Dispose();
             _screenQuad?.Dispose();
+            _ui?.Dispose();
+            _fontTex?.Dispose();
+            _audio?.Dispose();
+            AssetManager.ClearAll();
             base.OnUnload();
         }
 

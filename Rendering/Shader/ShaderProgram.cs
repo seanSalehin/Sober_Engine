@@ -140,7 +140,7 @@ namespace Sober.Rendering.Shader
                 error = ex.Message;
                 return false;
             }
-        }
+        }        
 
         private static string FindProjectRoot()
         {

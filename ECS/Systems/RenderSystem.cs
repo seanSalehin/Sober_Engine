@@ -1,9 +1,4 @@
 ﻿//Queries renderable entities/ Binds shaders, meshes, textures
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sober.ECS.Components;
 using Sober.Rendering;
 
@@ -24,31 +19,73 @@ namespace Sober.ECS.Systems
 
         }
 
+
+        private struct DrawItem
+        {
+            public int EntityId;
+            public int Layer;
+            public bool IsSprite;
+        }
+
         public void Render()
         {
             _render.BeginFrame();
 
+            var layerStore = _world.GetStore<RenderLayerComponent>();
+            List<DrawItem> drawItems = new List<DrawItem>();
+            var tStore = _world.GetStore<TransformComponent>();
+            var mStore = _world.GetStore<MeshRendererComponent>();
+            var sStore = _world.GetStore<SpriteComponent>();
+
+
             //Draw Mesh
             foreach (int id in Query.with<TransformComponent, MeshRendererComponent>(_world))
             {
-                var tStore = _world.GetStore<TransformComponent>();
-                var mStore = _world.GetStore<MeshRendererComponent>();
-                var t = tStore.Get(id);
-                var m = mStore.Get(id);
-                _render.Draw(m.Mesh, m.Shader, t.WorldMatrix);
+                var layer = layerStore.Has(id) ? (int)layerStore.Get(id).Layer : (int)Sober.Rendering.Layers.RenderLayers.World;
+                drawItems.Add(new DrawItem
+                {
+                    EntityId = id,
+                    Layer = layer,
+                    IsSprite = false
+                });
             }
 
             //Draw Sprites
-            foreach(int id in Query.with<TransformComponent, SpriteComponent>(_world))
+            foreach (int id in Query.with<TransformComponent, SpriteComponent>(_world))
             {
-                var tStore = _world.GetStore<TransformComponent>();
-                var sStore = _world.GetStore<SpriteComponent>();
-                var t = tStore.Get(id);
-                var s = sStore.Get(id);
-                _spriteRenderer.Draw(s.Texture, t.WorldMatrix);
-                _spriteRenderer.Draw(s.Texture, t.WorldMatrix);
+                var layer = layerStore.Has(id) ? (int)layerStore.Get(id).Layer : (int)Sober.Rendering.Layers.RenderLayers.World;
+
+                drawItems.Add(new DrawItem
+                {
+                    EntityId = id,
+                    Layer = layer,
+                    IsSprite = true
+                });
+                }
+
+
+            drawItems.Sort((a, b) => a.Layer.CompareTo(b.Layer));
+
+            foreach (var item in drawItems)
+            {
+                if (item.IsSprite)
+                {
+                    var transform = tStore.Get(item.EntityId);
+                    var sprite = sStore.Get(item.EntityId);
+                    _spriteRenderer.Draw(sprite.Texture, transform.WorldMatrix);
+                }
+                else
+                {
+                    var transform = tStore.Get(item.EntityId);
+                    var meshRenderer = mStore.Get(item.EntityId);
+                    _render.Draw(meshRenderer.Mesh, meshRenderer.Shader, transform.WorldMatrix);
+                }
+
             }
         }
+
+
+
 
         public void Update(float dt)
         {
