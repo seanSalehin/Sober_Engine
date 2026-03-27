@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 using Sober.ECS.Components;
 using Sober.Engine.Core;
 using Sober.Engine.Input;
@@ -22,7 +17,6 @@ namespace Sober.ECS.Systems
 
         public void Render()
         {
-            //TODO
         }
 
         public void Update(float dt)
@@ -71,7 +65,7 @@ namespace Sober.ECS.Systems
                 }
                 if (cam.Dirty)
                 {
-                    float aspect = 16f / 9f;             //TODO: get actual aspect ratio
+                    float aspect = 16f / 9f;        
                     float halfH = cam.Size / cam.Zoom;
                     float halfW = halfH * aspect;
 
@@ -89,7 +83,7 @@ namespace Sober.ECS.Systems
     }
 
 
-        internal static class MatrixExtensions
+        public static class MatrixExtensions
         {
             public static Vector3 ExtractTranslation(this Matrix4 m) => m.ExtractTranslation();
         }

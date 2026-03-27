@@ -7,23 +7,23 @@ namespace Sober.Rendering
     public class Texture :IDisposable
     {
 
-        //pointer/ID to a texture stored on the GPU that outside code cannot overwrite it
+        public int Width { get; private set; }
+        public int Height { get; private set; }
         public int Handle { get; private set; }
 
         public Texture(string path)
         {
-            //Loads image from disk
             using var stream = File.OpenRead(path);
 
-            //Read the image file, decodes it, forces it into RGBA format
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-            //Create OpenGL texture
+            Width = image.Width;
+            Height = image.Height;
+
             Handle = GL.GenTexture();
 
             GL.BindTexture(TextureTarget.Texture2D, Handle);
 
-            //Upload pixel data to GPU
             GL.TexImage2D(
                     TextureTarget.Texture2D, 0 , PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data
                 );
@@ -31,15 +31,12 @@ namespace Sober.Rendering
             //Texture sampling parameters (UV)
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
 
-            //Pre-scaled versions of the texture
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
-            // Unbind
             GL.BindTexture(TextureTarget.Texture2D, 0);
-
 
         }
 

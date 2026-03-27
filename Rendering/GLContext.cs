@@ -19,7 +19,7 @@ namespace Sober.Rendering
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             //Sets the background color of the screen.
-            GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
+            GL.ClearColor(0.09f, 0.12f, 0.18f, 1.0f);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Sober.Rendering
             shader.Bind();
 
             //model transformation matrix
-            Matrix4 model = Matrix4.CreateScale(size.X, size.Y, 1f)* Matrix4.CreateTranslation(position.X, position.Y, 0f);
+            Matrix4 model = Matrix4.CreateTranslation(position.X, position.Y, 0f) * Matrix4.CreateScale(size.X, size.Y, 1f);
 
             shader.SetMatrix4("u_ViewProj", ECS.Systems.CameraSystem.CurrentViewProj);
 

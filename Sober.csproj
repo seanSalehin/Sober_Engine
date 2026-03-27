@@ -23,6 +23,7 @@
     <None Remove="Assets\Shaders\sprite.vert" />
     <None Remove="Assets\Shaders\ui.frag" />
     <None Remove="Assets\Shaders\ui.vert" />
+    <None Remove="Assets\Sprites\tileset.png" />
 	  <None Remove="Assets\Textures\sprite.png" />
 	  <None Remove="Assets\Textures\particle.vert" />
 	  <None Remove="Assets\Textures\particle.frag" />
@@ -31,6 +32,10 @@
 	  <None Remove="Assets\Textures\blur.frag" />
 	  <None Remove="Assets\Audio\explosion.wav" />
 	  <None Remove="Assets\Textures\font.png" />
+	  <None Remove="Assets\Sprites\tileset.png" />
+	  <None Remove="Assets\Shaders\tilemap.frag" />
+	  <None Remove="Assets\Shaders\tilemap.vert" />
+	  <None Remove="Assets\Tilemaps\level1.json" />
 	  
   </ItemGroup>
 
@@ -80,6 +85,9 @@
     <Content Include="Assets\Shaders\ui.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Sprites\tileset.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Textures\sprite.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -119,6 +127,23 @@
 	  <Content Include="Assets\Textures\font.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+
+	  <Content Include="Assets\Sprites\tileset.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+
+	  <Content Include="Assets\Shaders\tilemap.frag">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Assets\Shaders\tilemap.vert">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+
+	  <Content Include="Assets\Tilemaps\level1.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	  
   </ItemGroup>
 
@@ -126,6 +151,10 @@
     <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\Tilemaps\" />
   </ItemGroup>
 
 </Project>

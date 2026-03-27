@@ -24,6 +24,14 @@ namespace Sober.ECS.Systems
             var circleStore = _world.GetStore<CircleColliderComponent>();
             var stateStore = _world.GetStore<CollisionStateComponent>();
             var staticStore = _world.GetStore<StaticBodyTag>();
+            var moveStore = _world.GetStore<PlayerMovementComponent>();
+
+            foreach (var element in moveStore.All())
+            {
+                var move = element.Value;
+                move.IsGrounded = false;
+                moveStore.Set(element.Key, move);
+            }
 
 
             //check if collision state exist for aabb and circle
@@ -175,8 +183,8 @@ namespace Sober.ECS.Systems
             Vector2 delta = aPosition - bPosition;
 
             Vector2 overlap = new Vector2(
-                (aData.Halfsize.X / 2 + bData.Halfsize.X / 2) - MathF.Abs(delta.X),
-                (aData.Halfsize.Y / 2 + bData.Halfsize.Y / 2) - MathF.Abs(delta.Y)
+                (aData.Halfsize.X + bData.Halfsize.X) - MathF.Abs(delta.X),
+                (aData.Halfsize.Y + bData.Halfsize.Y) - MathF.Abs(delta.Y)
             );
 
             bool hit = overlap.X > 0 && overlap.Y > 0;
@@ -207,6 +215,20 @@ namespace Sober.ECS.Systems
             aTime.LocalPosition += push;
             aTime.Dirty = true;
             timeStore.Set(a, aTime);
+
+            //jump
+            var moveStore = _world.GetStore<PlayerMovementComponent>();
+
+            // grounded check (ONLY when landing)
+            if (push.Y > 0) // pushed UP → landed on ground
+            {
+                if (moveStore.Has(a))
+                {
+                    var move = moveStore.Get(a);
+                    move.IsGrounded = true;
+                    moveStore.Set(a, move);
+                }
+            }
 
             //stop velocity on the axis that collided
             if (velocityStore.Has(a))

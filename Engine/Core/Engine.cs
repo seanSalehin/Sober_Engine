@@ -21,10 +21,9 @@ using Sober.Rendering.Mesh;
 using Sober.Rendering.Particles;
 using Sober.Rendering.PostProcessing;
 using Sober.Rendering.Shader;
+using Sober.Rendering.Tilemap;
 using Sober.Rendering.UI;
 using Sober.Scene;
-using Sober.Audio;
-using Sober.Rendering.UI;
 
 namespace Sober.Engine.Core
 {
@@ -89,6 +88,17 @@ namespace Sober.Engine.Core
         private Entity  _audioEntity;
         private AudioSystem _audioSystem;
 
+        //Tilemap
+        private TilemapRenderer _tilemapRenderer;
+        private TilemapSystem _tilemapSystem;
+        private TileCollisionSystem _tileCollisionSystem;
+        private ParallaxRenderer _parallaxRenderer;
+        private ParallaxSystem _parallaxSystem;
+        private ShaderProgram _tilemapShader;
+
+        //debugging tool
+        private bool _showDebug = true;
+
 
         //GameWindowSettings => update frequency, render frequency
         //NativeWindowSettings => window size, title
@@ -125,7 +135,6 @@ namespace Sober.Engine.Core
             _movementSystem = new MovementSystem(_world);
             _cameraSystem = new CameraSystem(_world);
 
-            _systems.Add(_inputSystem);
             _systems.Add(_transformSystem);
             _systems.Add(_renderSystem);
             _systems.Add(_movementSystem);
@@ -154,7 +163,7 @@ namespace Sober.Engine.Core
             _sceneManager.LoadScene("Assets/Scene/scene_main.json");
 
             //Test scene with physics and collision
-            SpawnTestGroundAndPlayer();
+            //SpawnTestGroundAndPlayer();
             VSync = VSyncMode.On;
 
             //Physics + collision + Debug + FPS
@@ -176,21 +185,21 @@ namespace Sober.Engine.Core
 
 
             //emitter test
-            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
-            _world.GetStore<ParticleEmitterComponent>().Set(
-                playerId,
-                new ParticleEmitterComponent(
-                            rate: 120f,
-                            lifeMin: 0.25f, lifeMax: 0.6f,
-                            speedMin: 0.2f, speedMax: 1.2f,
-                            sizeMin: 6f, sizeMax: 15f,
-                            color: new Vector4(0.3f, 0.7f, 1f, 1f)
-                       )
-                );
-            var emitStore = _world.GetStore<ParticleEmitterComponent>();
-            var emit = emitStore.Get(playerId);
-            emit.Enabled = false;
-            emitStore.Set(playerId, emit);
+            //int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+            //_world.GetStore<ParticleEmitterComponent>().Set(
+            //    playerId,
+            //    new ParticleEmitterComponent(
+            //                rate: 120f,
+            //                lifeMin: 0.25f, lifeMax: 0.6f,
+            //                speedMin: 0.2f, speedMax: 1.2f,
+            //                sizeMin: 6f, sizeMax: 15f,
+            //                color: new Vector4(0.3f, 0.7f, 1f, 1f)
+            //           )
+            //    );
+            //var emitStore = _world.GetStore<ParticleEmitterComponent>();
+            //var emit = emitStore.Get(playerId);
+            //emit.Enabled = false;
+            //emitStore.Set(playerId, emit);
 
 
 
@@ -234,7 +243,177 @@ namespace Sober.Engine.Core
                 Volume = 1f,
                 PlayRequested = false
             });
+
+
+            //tilemap
+            _tilemapShader = new ShaderProgram("Assets/Shaders/tilemap.vert", "Assets/Shaders/tilemap.frag");
+            _tilemapRenderer = new TilemapRenderer(_tilemapShader);
+
+            _parallaxRenderer = new ParallaxRenderer(_spriteShader, MeshFactory.CreateQuad());
+
+            _tilemapSystem = new TilemapSystem(_world, _tilemapRenderer);
+            _tileCollisionSystem = new TileCollisionSystem(_world);
+            _parallaxSystem = new ParallaxSystem(_world, _parallaxRenderer);
+
+            //_systems.Add(_parallaxSystem);
+            _systems.Add(_tilemapSystem);
+
+            var data = TilemapLoader.Load("Assets/Tilemaps/level1.json");
+
+            var mapEntity = _world.CreateEntity();
+
+            Vector2 mapOrigin = new Vector2(-10f, -6f);
+
+            _world.Add(mapEntity, new TransformComponent
+            {
+                LocalPosition = mapOrigin,
+                LocalScale = Vector2.One,
+                LocalRotation = 0f,
+                Dirty = true
+            });
+
+            var mapTexture = AssetManager.GetTexture(data.TileSet, data.TileSet);
+
+            _world.Add(mapEntity, new TilemapComponent(
+                data.Width,
+                data.Height,
+                data.TileSize,
+                data.Tiles,
+                data.TileSet,
+                mapTexture
+            ));
+
+            int[] solid = new int[data.Tiles.Length];
+            for (int i = 0; i < data.Tiles.Length; i++)
+            {
+                solid[i] = data.Tiles[i] > 0 ? 1 : 0;
+            }
+
+            _world.Add(mapEntity, new TileCollisionComponent(
+                data.Width,
+                data.Height,
+                data.TileSize,
+                solid
+            ));
+
+            var staticAabbStore = _world.GetStore<AabbColliderComponent>();
+            var staticTransformStore = _world.GetStore<TransformComponent>();
+            var staticBodyStore = _world.GetStore<StaticBodyTag>();
+
+            for (int y = 0; y < data.Height; y++)
+            {
+                int x = 0;
+
+                while (x < data.Width)
+                {
+                    int start = x;
+
+                    while (x < data.Width)
+                    {
+                        int i = y * data.Width + x;
+                        if (data.Tiles[i] <= 0)
+                            break;
+
+                        x++;
+                    }
+
+                    int end = x - 1;
+
+                    if (end >= start)
+                    {
+                        int flippedY = (data.Height - 1) - y;
+
+                        float width = (end - start + 1) * data.TileSize;
+                        float height = data.TileSize;
+
+                        float centerX = mapOrigin.X + start * data.TileSize + width * 0.5f;
+                        float centerY = mapOrigin.Y + flippedY * data.TileSize + height * 0.5f;
+
+                        var e = _world.CreateEntity();
+                        _world.Add(e, TransformComponent.Default());
+
+                        var t = staticTransformStore.Get(e.Id);
+                        t.LocalPosition = new Vector2(centerX, centerY);
+                        t.LocalScale = new Vector2(width, height);
+                        t.LocalRotation = 0f;
+                        t.Dirty = true;
+                        staticTransformStore.Set(e.Id, t);
+
+                        staticAabbStore.Set(
+                            e.Id,
+                            new AabbColliderComponent(
+                                new Vector2(width * 0.5f, height * 0.5f),
+                                CollisionLayers.World,
+                                CollisionLayers.Player
+                            )
+                        );
+
+                        staticBodyStore.Set(e.Id, new StaticBodyTag());
+                    }
+
+                    x++;
+
+                    while (x < data.Width)
+                    {
+                        int i = y * data.Width + x;
+                        if (data.Tiles[i] > 0)
+                            break;
+
+                        x++;
+                    }
+                }
+            }
+
+
+            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+
+            var tStore = _world.GetStore<TransformComponent>();
+            var pt = tStore.Get(playerId);
+            pt.LocalPosition = new Vector2(-7.5f, -0.5f);
+            pt.LocalScale = new Vector2(0.60f, 0.60f);
+            pt.Dirty = true;
+            tStore.Set(playerId, pt);
+
+            var aabbStore = _world.GetStore<AabbColliderComponent>();
+            aabbStore.Set(playerId, new AabbColliderComponent(
+                new Vector2(0.24f, 0.24f),
+                CollisionLayers.Player,
+                CollisionLayers.World
+            ));
+
+            var gravStore = _world.GetStore<GravityComponent>();
+            gravStore.Set(playerId, new GravityComponent(70f));
+
+            //jump
+            var moveStore = _world.GetStore<PlayerMovementComponent>();
+            moveStore.Set(playerId, new PlayerMovementComponent(8f, 25f));
+
+            var emitStore = _world.GetStore<ParticleEmitterComponent>();
+            emitStore.Set(
+                playerId,
+                new ParticleEmitterComponent(
+                    rate: 35f,
+                    lifeMin: 0.18f, lifeMax: 0.40f,
+                    speedMin: 0.15f, speedMax: 0.65f,
+                    sizeMin: 5f, sizeMax: 11f,
+                    color: new Vector4(1.0f, 0.72f, 0.18f, 0.70f)
+                )
+            );
+
+            var emit = emitStore.Get(playerId);
+            emit.Enabled = true;
+            emitStore.Set(playerId, emit);
+
+            int cameraId = _world.GetStore<CameraComponent>().All().First().Key;
+            var camStore = _world.GetStore<CameraComponent>();
+            var cam = camStore.Get(cameraId);
+            cam.Size = 6.2f;
+            cam.Zoom = 1.0f;
+            cam.Dirty = true;
+            camStore.Set(cameraId, cam);
+
         }
+       
 
 
         private void SpawnBurst(Vector2 pos, int count, BurstType type)
@@ -256,9 +435,10 @@ namespace Sober.Engine.Core
             //update loop => changes frame in the game world
             Time.Update((float)args.Time);
             Input.Input.Update(KeyboardState, MouseState);
+            _debugDrawSystem.Update();
+
 
             //debug (for collision) + fps
-            _debugDrawSystem.Update();
             _fpsSystem.Update((float)args.Time);
 
             base.OnUpdateFrame(args);
@@ -272,18 +452,20 @@ namespace Sober.Engine.Core
             //Scene management
             if(Input.Input.Down(Keys.F1))
             {
-                _sceneManager.LoadScene("Assets/Scene/scene_main.json");
+                //_sceneManager.LoadScene("Assets/Scene/scene_main.json");
             }
             if(Input.Input.Down(Keys.F2))
             {
-                _sceneManager.LoadScene("Assets/Scene/scene_test.json");
+                //_sceneManager.LoadScene("Assets/Scene/scene_test.json");
             }
 
-            //physics + collision 
+            //physics + collision+ tilemap
             while (Time.ConsumeFixedStep())
             { 
                 _physicsSystem.FixedUpdate(Time.FixedDeltaTime);
                 _collisionSystem.FixedUpdate(Time.FixedDeltaTime);
+                //_tileCollisionSystem.FixedUpdate(Time.FixedDeltaTime);
+
             }
 
 
@@ -292,7 +474,7 @@ namespace Sober.Engine.Core
 
 
             //audio (explosion)
-            if (Input.Input.Down(Keys.Space))
+            if (Input.Input.Down(Keys.F))
             {
                 var audioStore = _world.GetStore<AudioSourceComponent>();
                 var a = audioStore.Get(_audioEntity.Id);
@@ -314,18 +496,25 @@ namespace Sober.Engine.Core
             //post processing
             _sceneFbo.Bind();
             _render.BeginFrame();
+
             _systems.Render();
-            _debugDrawSystem?.Render();
+
+            GL.Disable(EnableCap.DepthTest);
+            _debugDrawSystem.Render();
+            GL.Enable(EnableCap.DepthTest);
+
             _render.EndFrame();
             _sceneFbo.Unbind(Size.X, Size.Y);
 
             _postShader.Bind();
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, _sceneFbo.ColorTexture);
+
             GL.Disable(EnableCap.DepthTest);
             _screenQuad.Draw();
             _uiSystem.Render();
             GL.Enable(EnableCap.DepthTest);
+
             SwapBuffers();
         }
 

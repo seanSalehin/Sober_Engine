@@ -31,9 +31,14 @@ namespace Sober.Scene
         private void RecalculateIfNeeded()
         {
             if (!_dirty) return;
-            _localMatrix = Matrix4.CreateScale(_localScale.X, _localScale.Y, 1f) *Matrix4.CreateRotationZ(_localRotation) *Matrix4.CreateTranslation(_localposition.X, _localposition.Y, 0f);
-                Matrix4 parentWorld = _parent?.WorldMatrix ?? Matrix4.Identity;
-               _worldMatrix = parentWorld * _localMatrix;
+
+            _localMatrix =
+                Matrix4.CreateTranslation(_localposition.X, _localposition.Y, 0f) *
+                Matrix4.CreateRotationZ(_localRotation) *
+                Matrix4.CreateScale(_localScale.X, _localScale.Y, 1f);
+
+            Matrix4 parentWorld = _parent?.WorldMatrix ?? Matrix4.Identity;
+            _worldMatrix = parentWorld * _localMatrix;
 
             _dirty = false;
         }

@@ -208,13 +208,13 @@ namespace Sober.Rendering.Shader
         private readonly HashSet<string> _missing = new();
         public void SetInt(string name, int value)
         {
-            if (!_uniformLocations.TryGetValue(name, out int loc) || loc == -1)
+            int location = GL.GetUniformLocation(Test_Data, name);
+            if (location == -1)
             {
-                if (_missing.Add(name))
-                    Console.WriteLine($"Warning: Uniform '{name}' not found in shader.");
+                Console.WriteLine($"Warning: Uniform '{name}' not found in shader.");
                 return;
             }
-            GL.Uniform1(loc, value);
+            GL.Uniform1(location, value);
         }
 
         public void Dispose()

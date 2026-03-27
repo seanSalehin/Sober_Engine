@@ -6,8 +6,7 @@
 
         public GravityComponent(float strength)
         {
-            //TODO: hardcoded
-            Strength = 50f;
+            Strength = strength;
         }
     }
 }

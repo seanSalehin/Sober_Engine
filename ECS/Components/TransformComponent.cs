@@ -1,9 +1,4 @@
 ﻿//Store Positions, Rotation, Scale of an entity in 3D space + cache world matrix
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK.Mathematics;
 
 

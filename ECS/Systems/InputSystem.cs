@@ -19,9 +19,7 @@ namespace Sober.ECS.Systems
 
         public void Render()
         {
-            //TODO
         }
-
         public void Update(float dt)
         {
             var tStore = _world.GetStore<TransformComponent>();
@@ -64,7 +62,6 @@ namespace Sober.ECS.Systems
                     dir = Vector2.Normalize(dir);
                 }
 
-                //converts direction into actual movement speed.
                 vel.Velocity = dir * vel.Speed;
                 vStore.Set(id, vel);
             }
