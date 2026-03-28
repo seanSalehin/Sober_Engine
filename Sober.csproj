@@ -13,6 +13,7 @@
     <None Remove="Assets\Prefabs\player_cat.json" />
     <None Remove="Assets\Scene\scene_main.json" />
     <None Remove="Assets\Scene\scene_test.json" />
+    <None Remove="Assets\Scripts\intro.json" />
     <None Remove="Assets\Shaders\color.frag" />
     <None Remove="Assets\Shaders\color.vert" />
     <None Remove="Assets\Shaders\debug_line.frag" />
@@ -24,6 +25,7 @@
     <None Remove="Assets\Shaders\ui.frag" />
     <None Remove="Assets\Shaders\ui.vert" />
     <None Remove="Assets\Sprites\tileset.png" />
+    <None Remove="Assets\Textures\cat_sheet.png" />
 	  <None Remove="Assets\Textures\sprite.png" />
 	  <None Remove="Assets\Textures\particle.vert" />
 	  <None Remove="Assets\Textures\particle.frag" />
@@ -36,7 +38,13 @@
 	  <None Remove="Assets\Shaders\tilemap.frag" />
 	  <None Remove="Assets\Shaders\tilemap.vert" />
 	  <None Remove="Assets\Tilemaps\level1.json" />
+	  <None Remove="	  Assets\Textures\cat_sheet.png" />
+	  <None Remove="Assets\Shaders\light.frag" />
+	  <None Remove="Assets\Shaders\light.vert" />
+	  <None Remove="Assets\Scripts\intro.json" />
+
 	  
+
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +61,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Scene\scene_test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Scripts\intro.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Shaders\color.frag">
@@ -86,6 +97,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Sprites\tileset.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cat_sheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Textures\sprite.png">
@@ -142,6 +156,25 @@
 
 
 	  <Content Include="Assets\Tilemaps\level1.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+
+	  <Content Include="Assets\Textures\cat_sheet.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+
+	  <Content Include="Assets\Shaders\light.vert">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+	  <Content Include="Assets\Shaders\light.frag">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+
+
+	  <Content Include="Assets\Scripts\intro.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  

@@ -1,0 +1,13 @@
+{
+    "Id": "intro_sequence",
+    "Events": [
+        {
+            "Type": "print",
+            "Message": "WARNING: Intruder detected in sector 4!"
+        },
+        {
+            "Type": "burst",
+            "Count": 150
+        }
+    ]
+}

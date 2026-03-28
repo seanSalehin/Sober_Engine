@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Compute.OpenCL;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using Sober.ECS.Systems;
 using Sober.Rendering.Mesh;
@@ -22,15 +23,12 @@ namespace Sober.Rendering
 
         public void Draw(Texture texture, Vector2 position, Vector2 size)
         {
-            //Activates the GPU shader
             shader.Bind();
-
-            //model transformation matrix
             Matrix4 model = Matrix4.CreateTranslation(position.X, position.Y, 0f) * Matrix4.CreateScale(size.X, size.Y, 1f);
-
-            shader.SetMatrix4("u_ViewProj", ECS.Systems.CameraSystem.CurrentViewProj);
-
+            shader.SetMatrix4("u_ViewProj", CameraSystem.CurrentViewProj);
             shader.SetMatrix4("u_Model", model);
+
+            shader.SetVector4("u_UVOffset", new Vector4(0f, 0f, 1f, 1f));
 
             texture.Bind(TextureUnit.Texture0);
             GL.Uniform1(GL.GetUniformLocation(shader.Test_Data, "u_Texture"), 0);
@@ -38,20 +36,50 @@ namespace Sober.Rendering
             quad.Bind();
             quad.Draw();
             quad.Unbind();
-
         }
 
-        public void Draw(Texture texture, OpenTK.Mathematics.Matrix4 worldMatrix)
+        public void Draw(Texture texture, Matrix4 worldMatrix)
         {
-            //draw a textured quad using the object’s transform.
             shader.Bind();
             shader.SetMatrix4("u_Model", worldMatrix);
             shader.SetMatrix4("u_ViewProj", CameraSystem.CurrentViewProj);
-            texture.Bind(OpenTK.Graphics.OpenGL4.TextureUnit.Texture0);
-            //where is the u_Texture uniform in this shader?
-            int loc = OpenTK.Graphics.OpenGL4.GL.GetUniformLocation(shader.Test_Data, "u_Texture");
-            //uniform doesn’t exist
-            if (loc != -1) OpenTK.Graphics.OpenGL4.GL.Uniform1(loc, 0);
+
+            shader.SetVector4("u_UVOffset", new Vector4(0f, 0f, 1f, 1f));
+
+            texture.Bind(TextureUnit.Texture0);
+            int loc = GL.GetUniformLocation(shader.Test_Data, "u_Texture");
+            if (loc != -1) GL.Uniform1(loc, 0);
+            quad.Bind();
+            quad.Draw();
+            quad.Unbind();
+        }
+
+
+        public void Draw(Texture texture, Matrix4 worldMatrix, int frameId)
+        {
+            shader.Bind();
+            shader.SetMatrix4("u_Model", worldMatrix);
+            shader.SetMatrix4("u_ViewProj", CameraSystem.CurrentViewProj);
+
+            float sheetWidth = 8.0f;
+            float sheetHeight = 80.0f;
+
+            int col = frameId % (int)sheetWidth;
+            int row = frameId / (int)sheetWidth;
+
+            float uvWidth = 1.0f / sheetWidth;
+            float uvHeight = 1.0f / sheetHeight;
+
+            float u = col * uvWidth;
+            float v = 1.0f - (row * uvHeight);
+
+            shader.SetVector4("u_UVOffset", new Vector4(u, v, uvWidth, -uvHeight));
+
+            texture.Bind(TextureUnit.Texture0);
+
+            int loc = GL.GetUniformLocation(shader.Test_Data, "u_Texture");
+            if (loc != -1) GL.Uniform1(loc, 0);
+
             quad.Bind();
             quad.Draw();
             quad.Unbind();

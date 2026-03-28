@@ -217,6 +217,18 @@ namespace Sober.Rendering.Shader
             GL.Uniform1(location, value);
         }
 
+        public void SetVector2(string name, Vector2 data)
+        {
+            int location = GL.GetUniformLocation(Test_Data, name);
+            if (location != -1) GL.Uniform2(location, data);
+        }
+
+        public void SetVector3(string name, Vector3 data)
+        {
+            int location = GL.GetUniformLocation(Test_Data, name);
+            if (location != -1) GL.Uniform3(location, data);
+        }
+
         public void Dispose()
         {
             GL.DeleteProgram(Test_Data);

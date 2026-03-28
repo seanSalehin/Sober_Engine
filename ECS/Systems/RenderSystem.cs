@@ -36,6 +36,7 @@ namespace Sober.ECS.Systems
             var tStore = _world.GetStore<TransformComponent>();
             var mStore = _world.GetStore<MeshRendererComponent>();
             var sStore = _world.GetStore<SpriteComponent>();
+            var animatorStore = _world.GetStore<AnimatorComponent>();
 
 
             //Draw Mesh
@@ -53,16 +54,9 @@ namespace Sober.ECS.Systems
             //Draw Sprites
             foreach (int id in Query.with<TransformComponent, SpriteComponent>(_world))
             {
-                var layer = layerStore.Has(id) ? (int)layerStore.Get(id).Layer : (int)Sober.Rendering.Layers.RenderLayers.World;
-
-                drawItems.Add(new DrawItem
-                {
-                    EntityId = id,
-                    Layer = layer,
-                    IsSprite = true
-                });
-                }
-
+                var layer = layerStore.Has(id) ? (int)layerStore.Get(id).Layer : (int)Rendering.Layers.RenderLayers.World;
+                drawItems.Add(new DrawItem { EntityId = id, Layer = layer, IsSprite = true });
+            }
 
             drawItems.Sort((a, b) => a.Layer.CompareTo(b.Layer));
 
@@ -72,7 +66,20 @@ namespace Sober.ECS.Systems
                 {
                     var transform = tStore.Get(item.EntityId);
                     var sprite = sStore.Get(item.EntityId);
-                    _spriteRenderer.Draw(sprite.Texture, transform.WorldMatrix);
+
+                    if (animatorStore.Has(item.EntityId))
+                    {
+                        var anim = animatorStore.Get(item.EntityId);
+                        var clip = anim.StateMachine.CurrentClip();
+
+                        // FORCE it to crop. If clip is null, default to frame 0.
+                        int frameId = (clip != null) ? clip.Frames[anim.FrameIndex] : 0;
+                        _spriteRenderer.Draw(sprite.Texture, transform.WorldMatrix, frameId);
+                    }
+                    else
+                    {
+                        _spriteRenderer.Draw(sprite.Texture, transform.WorldMatrix);
+                    }
                 }
                 else
                 {
@@ -80,7 +87,6 @@ namespace Sober.ECS.Systems
                     var meshRenderer = mStore.Get(item.EntityId);
                     _render.Draw(meshRenderer.Mesh, meshRenderer.Shader, transform.WorldMatrix);
                 }
-
             }
         }
 

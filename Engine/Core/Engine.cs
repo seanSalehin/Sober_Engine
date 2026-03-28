@@ -1,7 +1,7 @@
-﻿// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+﻿// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //                S O B E R   E N G I N E
 //                     Sean Salehin
-// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -99,6 +99,16 @@ namespace Sober.Engine.Core
         //debugging tool
         private bool _showDebug = true;
 
+        //animation
+        private AnimationSystem _animationSystem;
+
+
+        //lightening  + scripting
+        private ShaderProgram _lightShader;
+        private FrameBuffer _lightFbo;
+        private LightSystem _lightSystem;
+        private ScriptSystem _scriptSystem;
+
 
         //GameWindowSettings => update frequency, render frequency
         //NativeWindowSettings => window size, title
@@ -134,7 +144,9 @@ namespace Sober.Engine.Core
             _renderSystem = new RenderSystem(_world, _render, _spriteRenderer);
             _movementSystem = new MovementSystem(_world);
             _cameraSystem = new CameraSystem(_world);
+            _animationSystem = new AnimationSystem(_world);
 
+            _systems.Add(_animationSystem);
             _systems.Add(_transformSystem);
             _systems.Add(_renderSystem);
             _systems.Add(_movementSystem);
@@ -185,7 +197,7 @@ namespace Sober.Engine.Core
 
 
             //emitter test
-            //int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
             //_world.GetStore<ParticleEmitterComponent>().Set(
             //    playerId,
             //    new ParticleEmitterComponent(
@@ -215,6 +227,29 @@ namespace Sober.Engine.Core
             _postShader.SetInt("u_Scene", 0);
             _postShader.UnBind();
             _shaderHotReloader.Track(_postShader, "Assets/Shaders/post.vert", "Assets/Shaders/post.frag");
+
+
+            //script
+            _scriptSystem = new ScriptSystem(_world, (pos, count) => SpawnBurst(pos, count, BurstType.Sparks));
+            _systems.Add(_scriptSystem);
+
+
+            //lightening
+            _lightShader = new ShaderProgram("Assets/Shaders/light.vert", "Assets/Shaders/light.frag");
+            _lightFbo = new FrameBuffer(Size.X, Size.Y); 
+            _lightSystem = new LightSystem(_world, _lightShader, _screenQuad, Size.X, Size.Y);
+
+            _world.GetStore<LightComponent>().Set(playerId, new LightComponent(
+                color: new Vector3(1.0f, 0.6f, 0.2f),
+                radius: 0.15f,
+                intensity: 1.5f
+            ));
+
+            var triggerEntity = _world.CreateEntity();
+            var triggerTrans = TransformComponent.Default();
+            triggerTrans.LocalPosition = new Vector2(2.0f, 0f); 
+            _world.Add(triggerEntity, triggerTrans);
+            _world.Add(triggerEntity, new TriggerZoneComponent(new Vector2(0.5f, 0.5f), "intro"));
 
 
             //UI + HUD
@@ -365,8 +400,6 @@ namespace Sober.Engine.Core
             }
 
 
-            int playerId = _world.GetStore<PlayerTag>().All().First().Key;
-
             var tStore = _world.GetStore<TransformComponent>();
             var pt = tStore.Get(playerId);
             pt.LocalPosition = new Vector2(-7.5f, -0.5f);
@@ -401,7 +434,7 @@ namespace Sober.Engine.Core
             );
 
             var emit = emitStore.Get(playerId);
-            emit.Enabled = true;
+            emit.Enabled = false;
             emitStore.Set(playerId, emit);
 
             int cameraId = _world.GetStore<CameraComponent>().All().First().Key;
@@ -412,8 +445,24 @@ namespace Sober.Engine.Core
             cam.Dirty = true;
             camStore.Set(cameraId, cam);
 
+            //animation
+            //int catId = _world.GetStore<PlayerTag>().All().First().Key;
+            //var catAnim = new AnimatorComponent("Assets/Textures/cat_sheet.png", "Assets/Textures/cat_sheet.png");
+
+            //catAnim.StateMachine = new Rendering.Animation.AnimationStateMachine();
+
+            //var animIdle = new Rendering.Animation.AnimationClip { Name = "idle", Frames = new int[] { 0, 1, 2, 3 }, Fps = 4 };
+            //var animRun = new Rendering.Animation.AnimationClip { Name = "run", Frames = new int[] { 48, 49, 50, 51, 52, 53, 54, 55 }, Fps = 12 };
+
+            //catAnim.StateMachine.Add(animIdle);
+            //catAnim.StateMachine.Add(animRun);
+            //catAnim.StateMachine.SetState("idle");
+
+            //_world.GetStore<AnimatorComponent>().Set(catId, catAnim);
+            //_world.GetStore<VelocityComponent>().Set(catId, new VelocityComponent());
+
         }
-       
+
 
 
         private void SpawnBurst(Vector2 pos, int count, BurstType type)
@@ -496,7 +545,6 @@ namespace Sober.Engine.Core
             //post processing
             _sceneFbo.Bind();
             _render.BeginFrame();
-
             _systems.Render();
 
             GL.Disable(EnableCap.DepthTest);
@@ -506,9 +554,16 @@ namespace Sober.Engine.Core
             _render.EndFrame();
             _sceneFbo.Unbind(Size.X, Size.Y);
 
+            //lightening pass
+            _lightFbo.Bind();
+            _render.BeginFrame();
+            _lightSystem.RenderLightingPass(_sceneFbo.ColorTexture);
+            _render.EndFrame();
+            _lightFbo.Unbind(Size.X, Size.Y);
+
             _postShader.Bind();
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, _sceneFbo.ColorTexture);
+            GL.BindTexture(TextureTarget.Texture2D, _lightFbo.ColorTexture);
 
             GL.Disable(EnableCap.DepthTest);
             _screenQuad.Draw();
@@ -525,6 +580,10 @@ namespace Sober.Engine.Core
 
             //resize framebuffer for post processing
             _sceneFbo.Resize(Size.X, Size.Y);
+
+            //lightening pass
+            _lightFbo.Resize(Size.X, Size.Y);    
+            _lightSystem.Resize(Size.X, Size.Y);
         }
 
         protected override void OnUnload()

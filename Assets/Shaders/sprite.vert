@@ -6,9 +6,10 @@ out vec2 vTex;
 
 uniform mat4 u_Model;
 uniform mat4 u_ViewProj;
+uniform vec4 u_UVOffset;
 
 void main()
 {
     gl_Position = u_ViewProj * u_Model * vec4(aPos, 1.0);
-    vTex = vec2(aTex.x, 1.0 - aTex.y);
+vTex = vec2(aTex.x, 1.0 - aTex.y) * u_UVOffset.zw + u_UVOffset.xy;
 }
