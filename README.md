@@ -7,10 +7,11 @@
     <strong>A high-performance, data-driven 2D game engine built from scratch with C# and OpenGL.</strong>
   </p>
 
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <img src="https://img.shields.io/badge/Language-C%23_11.0-239120.svg" alt="Language: C#">
-  <img src="https://img.shields.io/badge/Graphics-OpenGL_4.0-5586A4.svg" alt="Graphics: OpenGL 4.0">
-  <img src="https://img.shields.io/badge/Architecture-ECS-orange.svg" alt="Architecture: ECS">
+<img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" alt="Build Status">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-informational?style=flat-square" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/dotnet-9.0-blueviolet?style=flat-square" alt="Target: .NET 9.0">
+  <img src="https://img.shields.io/badge/gl-4.0_core-blue?style=flat-square" alt="Graphics: OpenGL 4.0">
+  <img src="https://img.shields.io/badge/arch-ecs_contiguous-orange?style=flat-square" alt="Architecture: ECS">
 </div>
 
 ---
