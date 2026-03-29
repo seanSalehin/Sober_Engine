@@ -4,8 +4,13 @@
   <h1>SOBER ENGINE</h1>
   
   <p>
-    <strong>A data-driven 2D game engine built from scratch with C# and OpenGL.</strong>
+    <strong>A high-performance, data-driven 2D game engine built from scratch with C# and OpenGL.</strong>
   </p>
+
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Language-C%23_11.0-239120.svg" alt="Language: C#">
+  <img src="https://img.shields.io/badge/Graphics-OpenGL_4.0-5586A4.svg" alt="Graphics: OpenGL 4.0">
+  <img src="https://img.shields.io/badge/Architecture-ECS-orange.svg" alt="Architecture: ECS">
 </div>
 
 ---
