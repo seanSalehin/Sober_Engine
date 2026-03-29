@@ -12,13 +12,23 @@ namespace Sober.Rendering.UI
             int index = c;
             int col = index % Cols;
             int row = index / Cols;
-            return new Vector2(col / (float)Cols, row / (float)Rows);
+
+            float u = (col / (float)Cols) + 0.002f;
+            float v = (row / (float)Rows) + 0.002f;
+
+            return new Vector2(u, v);
         }
 
         public Vector2 GetUvMax(char c)
         {
-            var min = GetUvMin(c);
-            return min + new Vector2(1f / Cols, 1f / Rows);
+            int index = c;
+            int col = index % Cols;
+            int row = index / Cols;
+
+            float u = ((col + 1) / (float)Cols) - 0.002f;
+            float v = ((row + 1) / (float)Rows) - 0.002f;
+
+            return new Vector2(u, v);
         }
     }
 }

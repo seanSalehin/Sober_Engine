@@ -28,8 +28,12 @@ namespace Sober.ECS.Systems
         {
             var triggerStore = _world.GetStore<TriggerZoneComponent>();
             var tStore = _world.GetStore<TransformComponent>();
-
             int playerId = _world.GetStore<PlayerTag>().All().First().Key;
+
+            var playerElements = _world.GetStore<PlayerTag>().All().ToList();
+            if (playerElements.Count == 0) return;
+            if (!tStore.Has(playerId)) return;
+
             var playerPos = tStore.Get(playerId).LocalPosition;
 
             foreach (int id in Query.with<TransformComponent, TriggerZoneComponent>(_world))

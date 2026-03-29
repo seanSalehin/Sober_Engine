@@ -72,8 +72,9 @@ namespace Sober.Rendering.UI
         {
             if (string.IsNullOrEmpty(text)) return;
 
-            float charWidth = tr.Size.X / text.Length;
-            float charHeight = tr.Size.Y;
+            float quadWidth = tr.Size.Y * 0.9f;
+
+            float stepX = tr.Size.Y * 0.55f;
 
             GL.ActiveTexture(TextureUnit.Texture0);
             fontTexture.Bind();
@@ -82,14 +83,20 @@ namespace Sober.Rendering.UI
             _shader.SetVector4("u_Color", color);
             _shader.SetInt("u_Font", 0);
 
+            float startX = (int)tr.Position.X;
+            float startY = (int)tr.Position.Y;
+
             for (int i = 0; i < text.Length; i++)
             {
-                char c = text[i];
+                char c = char.ToUpper(text[i]);
+                if (c == ' ') continue;
+
+                float xPos = startX + (i * stepX);
 
                 UITransform charTr = new UITransform(
                     tr.Anchor,
-                    new Vector2(tr.Position.X + i * charWidth, tr.Position.Y),
-                    new Vector2(charWidth, charHeight)
+                    new Vector2(xPos, startY),
+                    new Vector2(quadWidth, tr.Size.Y)
                 );
 
                 charTr.NdcRect(screenW, screenH, out Vector2 min, out Vector2 max);
@@ -99,14 +106,14 @@ namespace Sober.Rendering.UI
 
                 float[] vertices =
                 {
-            min.X, min.Y, uvMin.X, uvMax.Y,
-            max.X, min.Y, uvMax.X, uvMax.Y,
-            max.X, max.Y, uvMax.X, uvMin.Y,
+                    min.X, min.Y, uvMin.X, uvMax.Y,
+                    max.X, min.Y, uvMax.X, uvMax.Y,
+                    max.X, max.Y, uvMax.X, uvMin.Y,
 
-            min.X, min.Y, uvMin.X, uvMax.Y,
-            max.X, max.Y, uvMax.X, uvMin.Y,
-            min.X, max.Y, uvMin.X, uvMin.Y
-        };
+                    min.X, min.Y, uvMin.X, uvMax.Y,
+                    max.X, max.Y, uvMax.X, uvMin.Y,
+                    min.X, max.Y, uvMin.X, uvMin.Y
+                };
 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
                 GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, vertices.Length * sizeof(float), vertices);

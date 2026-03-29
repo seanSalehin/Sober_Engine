@@ -21,8 +21,8 @@ namespace Sober.ECS.Systems
 
         public void Update()
         {
-            // F3 (toggle debug)
-            if (Input.Down(Keys.F3))
+            // F3 or F7 (toggle debug)
+            if (Input.Down(Keys.F3) || Input.Down(Keys.F7))
                 Enabled = !Enabled;
         }
 

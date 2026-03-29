@@ -28,7 +28,7 @@ namespace Sober.Scene
 
         private void UnloadActiveScene()
         {
-            //delete all entities we created to replace it with the new scene
+            //delete all entities 
             foreach(var entity in _entityByName)
             {
                 _world.DestroyEntity(entity.Value);
@@ -64,7 +64,6 @@ namespace Sober.Scene
 
         public void LoadPrefabFiles(SceneData scene)
         {
-            //TODO: this is hardcoded for now
 
             //player prefab
             var playerPrefab  = SceneLoader.Load("Assets/Prefabs/player_cat.json");
@@ -94,6 +93,7 @@ namespace Sober.Scene
                     entityData = Library.Merge(prefab, entityData);
                 }
                 var e = _world.CreateEntity();
+                _world.Add(e, new NameComponent(entityData.Name));
                 _entityByName[entityData.Name] = e;
 
 
@@ -168,7 +168,6 @@ namespace Sober.Scene
 
         private void ResolveFollowTargets(SceneData scene)
         {
-            // resolve camera follow targets by name
             var follow = _world.GetStore<CameraFollowComponent>();
             foreach (var entityData in scene.Entities)
             {

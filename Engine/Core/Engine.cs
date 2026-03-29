@@ -14,6 +14,7 @@ using Sober.ECS;
 using Sober.ECS.Components;
 using Sober.ECS.Events;
 using Sober.ECS.Systems;
+using Sober.Editor;
 using Sober.Rendering;
 using Sober.Rendering.Debug;
 using Sober.Rendering.HotReload;
@@ -108,6 +109,13 @@ namespace Sober.Engine.Core
         private FrameBuffer _lightFbo;
         private LightSystem _lightSystem;
         private ScriptSystem _scriptSystem;
+
+
+        //editor 
+        private EditorSelection _editorSelection;
+        private RuntimeEditor _runtimeEditor;
+        private InspectorRenderer _inspectorRenderer;
+        private EditorSystem _editorSystem;
 
 
         //GameWindowSettings => update frequency, render frequency
@@ -397,6 +405,7 @@ namespace Sober.Engine.Core
                         x++;
                     }
                 }
+
             }
 
 
@@ -460,6 +469,15 @@ namespace Sober.Engine.Core
 
             //_world.GetStore<AnimatorComponent>().Set(catId, catAnim);
             //_world.GetStore<VelocityComponent>().Set(catId, new VelocityComponent());
+
+
+
+            //editor
+            _editorSelection = new EditorSelection();
+            _runtimeEditor = new RuntimeEditor(_world, _editorSelection);
+            _editorSystem = new EditorSystem(_runtimeEditor, _world, _sceneManager, _eventBus);
+            _systems.Add(_editorSystem);
+            _inspectorRenderer = new InspectorRenderer(_world, _runtimeEditor, _ui, _fontTex);
 
         }
 
@@ -568,6 +586,10 @@ namespace Sober.Engine.Core
             GL.Disable(EnableCap.DepthTest);
             _screenQuad.Draw();
             _uiSystem.Render();
+
+            //editor
+            _inspectorRenderer.Draw(Size.X, Size.Y);
+
             GL.Enable(EnableCap.DepthTest);
 
             SwapBuffers();
