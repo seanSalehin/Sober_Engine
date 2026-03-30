@@ -207,6 +207,6 @@ This engine relies on the following open-source libraries:
 
 This project is licensed under the **MIT License**.
 
-You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, provided that the above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+You are free to use, copy, modify, merge, publish, and distribute, the Software, provided that the above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 The "Sober Engine" name and accompanying logo are trademarks of Sean Salehin. Visual placeholder assets within the `/Assets` folder are provided for demonstration purposes only and do not carry copyright restriction.
